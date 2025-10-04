@@ -69,9 +69,12 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             // TODO: Delete comment
         }
 
-        // Help (placeholder)
+        // Help
         (KeyCode::Char('?'), KeyModifiers::SHIFT) => {
-            // TODO: Show help dialog
+            app.toggle_help();
+        }
+        (KeyCode::Esc, KeyModifiers::NONE) if app.help_visible => {
+            app.toggle_help();
         }
 
         _ => {}

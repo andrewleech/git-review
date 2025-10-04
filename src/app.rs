@@ -28,6 +28,7 @@ pub struct App {
     pub selected_commit_index: usize,
     pub selected_file_index: usize,
     pub log_pane_visible: bool,
+    pub help_visible: bool,
     pub scroll_offset: usize,
     pub cursor_line: usize, // Current line in diff view
     pub terminal_width: u16,
@@ -61,6 +62,7 @@ impl App {
             selected_commit_index: 0,
             selected_file_index: 0,
             log_pane_visible: true,
+            help_visible: false,
             scroll_offset: 0,
             cursor_line: 0,
             terminal_width: width,
@@ -117,6 +119,11 @@ impl App {
     /// Toggle log pane visibility
     pub fn toggle_log_pane(&mut self) {
         self.log_pane_visible = !self.log_pane_visible;
+    }
+
+    /// Toggle help dialog visibility
+    pub fn toggle_help(&mut self) {
+        self.help_visible = !self.help_visible;
     }
 
     /// Set diff mode

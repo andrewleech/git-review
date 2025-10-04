@@ -1,6 +1,7 @@
 pub mod diff_view;
 pub mod footer;
 pub mod header;
+pub mod help_dialog;
 pub mod hunk_expander;
 pub mod layout;
 pub mod log_pane;
@@ -46,6 +47,11 @@ pub fn render(f: &mut Frame, app: &App) -> Result<()> {
     // Render footer
     if let Some(footer_area) = layout_info.footer {
         footer::render(f, app, footer_area);
+    }
+
+    // Render help dialog on top if visible
+    if app.help_visible {
+        help_dialog::render(f, size);
     }
 
     Ok(())

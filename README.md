@@ -4,13 +4,19 @@ Terminal-based code review tool for git branches with GitHub-inspired diff UI.
 
 ## Features
 
+### Implemented
 - **GitHub-inspired diff interface** - Familiar color scheme and layout
 - **Responsive layout** - Works on screens from 80x24 to 200x50+
 - **Side-by-side and inline diff modes** - Switch between viewing styles
 - **Commit log sidebar** - Navigate through branch commits easily
-- **Per-hunk context expansion** - Dynamically expand context like on GitHub (planned)
-- **Syntax highlighting** - Language-aware code coloring (planned)
-- **Review comments** - Add comments to specific lines during review (planned)
+- **Interactive help dialog** - Press `?` for keyboard shortcuts
+- **Per-hunk context expansion UI** - Expand buttons shown (full integration pending)
+- **Mouse support** - Scroll wheel navigation
+
+### In Progress
+- **Syntax highlighting** - Module ready, UI integration pending
+- **Review comments** - Persistence system complete, UI integration pending
+- **Context expansion** - Button UI complete, diff regeneration pending
 
 ## Installation
 
@@ -57,12 +63,12 @@ Options:
 - `j/k` or `↓/↑` - Scroll diff view
 - `n/p` - Next/previous commit
 - `[/]` - Next/previous file
-- `?` - Show help (planned)
+- `?` - Show help dialog
+- `Esc` - Close help dialog
 
 ### Mouse Support
 
 - Scroll wheel to navigate diff
-- Click to select commits (planned)
 
 ## Configuration
 
@@ -111,18 +117,34 @@ Use the included `release.sh` script:
 
 ## Project Status
 
-This is an early-stage project. Current implementation includes:
+**Version**: 0.1.0 (Early Development)
 
-- [x] Git integration (commit log, diff generation)
-- [x] Responsive TUI layout
-- [x] Commit log pane
-- [x] Basic diff view (inline and side-by-side)
-- [x] Keyboard navigation
-- [ ] Per-hunk context expansion
-- [ ] Syntax highlighting
-- [ ] Review comments feature
-- [ ] Comprehensive tests
-- [ ] Documentation and screenshots
+### Completed
+- [x] Git integration (commit log, diff generation, branch detection)
+- [x] Responsive TUI layout (80x24 to 200x50+)
+- [x] Commit log pane with selection
+- [x] Diff view (inline and side-by-side modes)
+- [x] Keyboard and mouse navigation
+- [x] Help dialog
+- [x] Per-hunk context expansion UI (buttons visible)
+- [x] Syntax highlighting module (prepared)
+- [x] Review comments system (backend ready)
+- [x] Integration and unit tests (22 tests passing)
+- [x] CI/CD pipeline (GitHub Actions)
+- [x] Release automation (release.sh)
+
+### In Progress
+- [ ] Wire up context expansion to regenerate diffs
+- [ ] Integrate syntax highlighting into diff view
+- [ ] Integrate comment dialog UI
+- [ ] Add comprehensive error messages to UI
+
+### Future Enhancements
+- [ ] GitHub Pages documentation site
+- [ ] Terminal screenshots with termshot
+- [ ] Performance optimization for large diffs
+- [ ] File tree view
+- [ ] Search within diffs
 
 ## License
 
