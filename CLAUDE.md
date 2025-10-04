@@ -183,7 +183,7 @@ In-module tests (`#[cfg(test)]`) for:
 
 ## Implementation Progress
 
-**Current Status**: Version 0.1.0 - Core functionality complete, enhancement features in progress
+**Current Status**: Version 0.1.0 - Core functionality complete, ready for release
 
 ### Completed Features
 - [x] Project structure and dependencies
@@ -192,9 +192,10 @@ In-module tests (`#[cfg(test)]`) for:
 - [x] Configuration management with TOML persistence
 - [x] TUI initialization and event loop
 - [x] Responsive layout system (80x24 to 200x50+)
-- [x] Log pane with commit selection
+- [x] Log pane with commit selection (keyboard + mouse)
 - [x] Diff view (side-by-side and inline modes)
-- [x] Per-hunk context expansion UI (expand buttons visible)
+- [x] Context expansion (press 'e' to expand, 'r' to reset)
+- [x] All files shown in scrollable inline view
 - [x] Syntax highlighting module (prepared, not yet integrated)
 - [x] Review comments system (backend complete)
 - [x] Keyboard/mouse input handling
@@ -203,18 +204,25 @@ In-module tests (`#[cfg(test)]`) for:
 - [x] Tests (22 passing: 17 unit + 5 integration)
 - [x] Documentation (README, PLAN.md, CLAUDE.md)
 
-### Pending Integration
-- [ ] Wire expand buttons to regenerate diffs with more context
+### Recent Improvements
+- Fixed mouse click race condition on terminal resize
+- Added scroll bounds checking to prevent empty space
+- Optimized side-by-side rendering memory usage (windowed rendering)
+- Improved file line count estimation
+- Implemented context expansion with 'e' and 'r' keys
+
+### Pending Features (Future Versions)
 - [ ] Integrate syntax highlighting into diff rendering
 - [ ] Add comment dialog UI
-- [ ] Connect comment system to keyboard shortcuts
+- [ ] Connect comment system to keyboard shortcuts ('c', 'v', 'd')
+- [ ] GitHub Pages documentation site with termshot screenshots
 
 ### Code Quality Metrics
 - **Files**: 21 Rust source files
-- **Total Lines**: ~2,133 lines of code
-- **Largest File**: 249 lines (comments.rs) - 29% under 350-line limit
+- **Total Lines**: ~2,400 lines of code
+- **Largest File**: 315 lines (diff_view.rs) - 10% under 350-line limit
 - **Test Coverage**: 22 tests covering core functionality
-- **Build Time**: ~6.5s debug, ~2min release (due to syntect/git2)
+- **Build Time**: ~4s debug, ~2min release (due to syntect/git2)
 
 ## Common Tasks
 
