@@ -32,11 +32,10 @@ impl Hunk {
     }
 
     /// Check if more context is available below this hunk
-    pub fn can_expand_below(&self, _file_lines: usize) -> bool {
-        // This would need access to the full file to determine
-        // For now, assume expansion is possible
-        // TODO: Implement proper file length checking
-        true
+    pub fn can_expand_below(&self, file_lines: usize) -> bool {
+        // Check if this hunk reaches the end of the file
+        let hunk_end_line = self.new_start + self.new_lines;
+        hunk_end_line < file_lines
     }
 
     /// Calculate how many lines can be expanded above
@@ -51,6 +50,7 @@ pub struct FileDiff {
     pub old_path: String,
     pub new_path: String,
     pub hunks: Vec<Hunk>,
+    pub new_file_lines: Option<usize>, // Total lines in new version (if known)
 }
 
 /// Parse a unified diff format into structured hunks
@@ -77,6 +77,7 @@ pub fn parse_diff(diff_text: &str) -> Result<Vec<FileDiff>> {
                 old_path: String::new(),
                 new_path: String::new(),
                 hunks: Vec::new(),
+                new_file_lines: None,
             });
         } else if line.starts_with("--- ") {
             if let Some(ref mut file) = current_file {
@@ -173,6 +174,12 @@ pub fn parse_diff(diff_text: &str) -> Result<Vec<FileDiff>> {
         if let Some(hunk) = current_hunk {
             file.hunks.push(hunk);
         }
+
+        // Estimate file line count from last hunk
+        if let Some(last_hunk) = file.hunks.last() {
+            file.new_file_lines = Some(last_hunk.new_start + last_hunk.new_lines);
+        }
+
         files.push(file);
     }
 

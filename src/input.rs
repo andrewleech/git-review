@@ -19,10 +19,10 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
         }
 
         // Diff mode switching
-        (KeyCode::Char('s'), KeyModifiers::NONE) => {
+        (KeyCode::Char('s'), KeyModifiers::NONE) | (KeyCode::Char('S'), KeyModifiers::SHIFT) => {
             app.set_diff_mode(DiffMode::SideBySide);
         }
-        (KeyCode::Char('i'), KeyModifiers::NONE) => {
+        (KeyCode::Char('i'), KeyModifiers::NONE) | (KeyCode::Char('I'), KeyModifiers::SHIFT) => {
             app.set_diff_mode(DiffMode::Inline);
         }
 
@@ -69,12 +69,14 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             // TODO: Delete comment
         }
 
-        // Help
-        (KeyCode::Char('?'), KeyModifiers::SHIFT) => {
+        // Help - handle both ? directly and Shift+/
+        (KeyCode::Char('?'), _) | (KeyCode::Char('/'), KeyModifiers::SHIFT) => {
             app.toggle_help();
         }
-        (KeyCode::Esc, KeyModifiers::NONE) if app.help_visible => {
-            app.toggle_help();
+        (KeyCode::Esc, KeyModifiers::NONE) => {
+            if app.help_visible {
+                app.toggle_help();
+            }
         }
 
         _ => {}
@@ -93,7 +95,16 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
             app.scroll(-3);
         }
         MouseEventKind::Down(_button) => {
-            // TODO: Handle clicks (commit selection, expand buttons, comments)
+            // TODO: Handle clicks for:
+            // - Commit selection in log pane (check if click is in log pane area)
+            // - Expand button clicks (need to track which lines are expand buttons)
+            // - Comment indicators (when implemented)
+            //
+            // Mouse click position: (mouse.column, mouse.row)
+            // Will need to map screen coordinates to:
+            // - UI regions (log pane vs diff view)
+            // - Line numbers in diff view
+            // - Specific UI elements (expand buttons, etc.)
         }
         _ => {}
     }

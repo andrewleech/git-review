@@ -135,12 +135,13 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
                 lines.push(line);
             }
 
-            // Expand button below
+            // Expand button below (with file length check)
             if let Some(expand_line) = crate::ui::hunk_expander::create_expand_below_line(
                 hunk,
                 theme,
                 &hunk_id,
                 app.config.display.context_expand_increment,
+                file.new_file_lines,
             ) {
                 lines.push(expand_line);
             }
