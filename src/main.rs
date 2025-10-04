@@ -1,7 +1,9 @@
 mod app;
+mod comments;
 mod config;
 mod git;
 mod input;
+mod syntax;
 mod ui;
 
 use anyhow::{Context, Result};

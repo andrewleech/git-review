@@ -1,6 +1,7 @@
 pub mod diff_view;
 pub mod footer;
 pub mod header;
+pub mod hunk_expander;
 pub mod layout;
 pub mod log_pane;
 pub mod theme;

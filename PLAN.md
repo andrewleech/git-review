@@ -509,3 +509,32 @@ Contents:
 - Note any architectural decisions
 - Add troubleshooting guidance
 - Keep command examples current
+
+### Code Review Requirement
+
+**MANDATORY**: Before each git commit, perform an independent code review using the principal-code-reviewer agent.
+
+**Process**:
+1. Complete implementation of feature or fix
+2. Run all tests (`cargo test`)
+3. Run quality checks (`cargo fmt --check && cargo clippy`)
+4. Launch principal-code-reviewer agent for review
+5. Address any issues identified in review
+6. Create commit only after review approval
+
+**Review Focus Areas**:
+- Code simplicity and maintainability
+- Performance implications
+- Error handling completeness
+- Test coverage adequacy
+- Documentation clarity
+- Adherence to 350-line file limit
+- Potential edge cases or bugs
+
+**Agent Invocation**:
+```
+Use Task tool with subagent_type: "principal-code-reviewer"
+Provide context about the changes and request review
+```
+
+This ensures code quality and catches issues early in the development cycle.

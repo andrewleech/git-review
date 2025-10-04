@@ -29,6 +29,7 @@ pub struct App {
     pub selected_file_index: usize,
     pub log_pane_visible: bool,
     pub scroll_offset: usize,
+    pub cursor_line: usize, // Current line in diff view
     pub terminal_width: u16,
     pub terminal_height: u16,
 
@@ -61,6 +62,7 @@ impl App {
             selected_file_index: 0,
             log_pane_visible: true,
             scroll_offset: 0,
+            cursor_line: 0,
             terminal_width: width,
             terminal_height: height,
             current_files: Vec::new(),
@@ -120,16 +122,20 @@ impl App {
     /// Set diff mode
     pub fn set_diff_mode(&mut self, mode: DiffMode) {
         self.config.display.diff_mode = mode;
-        // Save config
-        let _ = self.config.save();
+        // Save config - log error but don't fail
+        if let Err(e) = self.config.save() {
+            eprintln!("Warning: Failed to save config: {}", e);
+        }
     }
 
     /// Scroll diff view
     pub fn scroll(&mut self, amount: isize) {
         if amount < 0 {
             self.scroll_offset = self.scroll_offset.saturating_sub(amount.unsigned_abs());
+            self.cursor_line = self.cursor_line.saturating_sub(amount.unsigned_abs());
         } else {
             self.scroll_offset = self.scroll_offset.saturating_add(amount as usize);
+            self.cursor_line = self.cursor_line.saturating_add(amount as usize);
         }
     }
 
@@ -161,12 +167,26 @@ impl App {
                 context_lines: self.config.display.context_lines,
             };
 
-            if let Ok(diff) = crate::git::generate_diff(&self.repo, commit.id, &diff_options) {
-                if let Ok(text) = crate::git::diff_to_text(&diff) {
-                    if let Ok(files) = crate::git::parse_diff(&text) {
-                        self.current_files = files;
-                        self.selected_file_index = 0;
+            match crate::git::generate_diff(&self.repo, commit.id, &diff_options) {
+                Ok(diff) => match crate::git::diff_to_text(&diff) {
+                    Ok(text) => match crate::git::parse_diff(&text) {
+                        Ok(files) => {
+                            self.current_files = files;
+                            self.selected_file_index = 0;
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to parse diff: {}", e);
+                            self.current_files = Vec::new();
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("Failed to convert diff to text: {}", e);
+                        self.current_files = Vec::new();
                     }
+                },
+                Err(e) => {
+                    eprintln!("Failed to generate diff: {}", e);
+                    self.current_files = Vec::new();
                 }
             }
         }

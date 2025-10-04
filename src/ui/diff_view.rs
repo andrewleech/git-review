@@ -106,8 +106,23 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
         )]));
         lines.push(Line::from(""));
 
-        // Show hunks
-        for hunk in &file.hunks {
+        // Show hunks with expand buttons
+        for (hunk_idx, hunk) in file.hunks.iter().enumerate() {
+            let hunk_id = crate::app::HunkId {
+                file_path: file.new_path.clone(),
+                hunk_index: hunk_idx,
+            };
+
+            // Expand button above (if more context available)
+            if let Some(expand_line) = crate::ui::hunk_expander::create_expand_above_line(
+                hunk,
+                theme,
+                &hunk_id,
+                app.config.display.context_expand_increment,
+            ) {
+                lines.push(expand_line);
+            }
+
             // Hunk header
             lines.push(Line::from(vec![Span::styled(
                 hunk.header.clone(),
@@ -118,6 +133,16 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
             for hunk_line in &hunk.lines {
                 let line = format_hunk_line(hunk_line, theme);
                 lines.push(line);
+            }
+
+            // Expand button below
+            if let Some(expand_line) = crate::ui::hunk_expander::create_expand_below_line(
+                hunk,
+                theme,
+                &hunk_id,
+                app.config.display.context_expand_increment,
+            ) {
+                lines.push(expand_line);
             }
 
             // Empty line between hunks
