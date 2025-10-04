@@ -116,14 +116,16 @@ fn render_inline(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
         .take(area.height.saturating_sub(2) as usize)
         .collect::<Vec<_>>();
 
+    let title = if app.current_files.len() > 1 {
+        format!(" Diff (Inline) - {} files ", app.current_files.len())
+    } else {
+        " Diff (Inline) ".to_string()
+    };
+
     let diff_paragraph = Paragraph::new(visible_lines)
         .block(
             Block::default()
-                .title(format!(
-                    " Diff (Inline) - File {}/{} ",
-                    app.selected_file_index + 1,
-                    app.current_files.len()
-                ))
+                .title(title)
                 .borders(Borders::ALL)
                 .border_style(theme.border_style()),
         )
@@ -132,11 +134,22 @@ fn render_inline(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
     f.render_widget(diff_paragraph, area);
 }
 
-/// Create styled lines from the current file's diff
+/// Create styled lines from all files' diffs
 fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
     let mut lines = Vec::new();
 
-    if let Some(file) = app.selected_file() {
+    // Show all files in one scrollable view
+    for (file_idx, file) in app.current_files.iter().enumerate() {
+        // File separator (except before first file)
+        if file_idx > 0 {
+            lines.push(Line::from(""));
+            lines.push(Line::from(vec![Span::styled(
+                "─".repeat(80),
+                theme.context_style(),
+            )]));
+            lines.push(Line::from(""));
+        }
+
         // Show file header
         lines.push(Line::from(vec![Span::styled(
             format!("--- {}", file.old_path),
