@@ -86,7 +86,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
 }
 
 /// Handle mouse input
-pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
+pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App, terminal_size: (u16, u16)) -> Result<()> {
     match mouse.kind {
         MouseEventKind::ScrollDown => {
             app.scroll(3);
@@ -95,19 +95,49 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
             app.scroll(-3);
         }
         MouseEventKind::Down(_button) => {
-            // TODO: Handle clicks for:
-            // - Commit selection in log pane (check if click is in log pane area)
-            // - Expand button clicks (need to track which lines are expand buttons)
-            // - Comment indicators (when implemented)
-            //
-            // Mouse click position: (mouse.column, mouse.row)
-            // Will need to map screen coordinates to:
-            // - UI regions (log pane vs diff view)
-            // - Line numbers in diff view
-            // - Specific UI elements (expand buttons, etc.)
+            handle_mouse_click(mouse, app, terminal_size)?;
         }
         _ => {}
     }
+
+    Ok(())
+}
+
+/// Handle mouse click events
+fn handle_mouse_click(mouse: MouseEvent, app: &mut App, terminal_size: (u16, u16)) -> Result<()> {
+    let (width, height) = terminal_size;
+
+    // Calculate layout to determine clickable regions
+    let layout_info = crate::ui::layout::calculate_layout(
+        width,
+        height,
+        app.log_pane_visible,
+        app.config.ui.log_pane_width_ratio,
+    );
+
+    // Check if click is in log pane
+    if app.log_pane_visible {
+        if let Some(log_area) = layout_info.log_pane {
+            if mouse.column >= log_area.x
+                && mouse.column < log_area.x + log_area.width
+                && mouse.row >= log_area.y
+                && mouse.row < log_area.y + log_area.height
+            {
+                // Click is in log pane - calculate which commit
+                // Account for borders (top border = 1 line) and title
+                let relative_row = mouse.row.saturating_sub(log_area.y + 1);
+
+                if relative_row < app.commits.len() as u16 {
+                    app.select_commit(relative_row as usize);
+                }
+                return Ok(());
+            }
+        }
+    }
+
+    // TODO: Handle clicks in diff view for:
+    // - Expand button clicks (need to track which lines are expand buttons)
+    // - Comment indicators (when implemented)
 
     Ok(())
 }

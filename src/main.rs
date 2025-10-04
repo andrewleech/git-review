@@ -117,7 +117,7 @@ fn app_loop(
                     }
                 }
                 crossterm::event::Event::Mouse(mouse) => {
-                    input::handle_mouse_event(mouse, app)?;
+                    input::handle_mouse_event(mouse, app, (app.terminal_width, app.terminal_height))?;
                 }
                 crossterm::event::Event::Resize(width, height) => {
                     app.handle_resize(width, height);

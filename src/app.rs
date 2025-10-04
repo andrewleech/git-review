@@ -82,6 +82,15 @@ impl App {
         self.current_files.get(self.selected_file_index)
     }
 
+    /// Select a specific commit by index
+    pub fn select_commit(&mut self, index: usize) {
+        if index < self.commits.len() && index != self.selected_commit_index {
+            self.selected_commit_index = index;
+            self.scroll_offset = 0;
+            self.load_diff_for_current_commit();
+        }
+    }
+
     /// Navigate to next commit
     pub fn next_commit(&mut self) {
         if self.selected_commit_index + 1 < self.commits.len() {
