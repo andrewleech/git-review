@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tput:*)",
+      "WebSearch",
+      "WebFetch(domain:crates.io)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/home/corona/git-ignore/"
+    ]
+  }
+}
