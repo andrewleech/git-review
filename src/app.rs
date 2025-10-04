@@ -36,8 +36,9 @@ pub struct App {
 
     // Current diff data
     pub current_files: Vec<FileDiff>,
+    pub current_context_lines: u32, // Context lines for current diff
 
-    // Hunk expansion tracking
+    // Hunk expansion tracking (currently unused - git2 doesn't support per-hunk expansion)
     pub hunk_expansions: HashMap<HunkId, ExpansionState>,
 
     // TODO: Comment tracking (for future implementation)
@@ -54,6 +55,8 @@ impl App {
         // Get initial terminal size
         let (width, height) = crossterm::terminal::size().unwrap_or((80, 24));
 
+        let initial_context = config.display.context_lines;
+
         Self {
             repo,
             commits,
@@ -68,6 +71,7 @@ impl App {
             terminal_width: width,
             terminal_height: height,
             current_files: Vec::new(),
+            current_context_lines: initial_context,
             hunk_expansions: HashMap::new(),
         }
     }
@@ -87,7 +91,7 @@ impl App {
         if index < self.commits.len() && index != self.selected_commit_index {
             self.selected_commit_index = index;
             self.scroll_offset = 0;
-            self.load_diff_for_current_commit();
+            self.reset_context(); // Reset to default context for new commit
         }
     }
 
@@ -96,7 +100,7 @@ impl App {
         if self.selected_commit_index + 1 < self.commits.len() {
             self.selected_commit_index += 1;
             self.scroll_offset = 0;
-            self.load_diff_for_current_commit();
+            self.reset_context(); // Reset to default context for new commit
         }
     }
 
@@ -105,7 +109,7 @@ impl App {
         if self.selected_commit_index > 0 {
             self.selected_commit_index -= 1;
             self.scroll_offset = 0;
-            self.load_diff_for_current_commit();
+            self.reset_context(); // Reset to default context for new commit
         }
     }
 
@@ -200,26 +204,38 @@ impl App {
         self.terminal_height = height;
     }
 
-    /// Expand context for a specific hunk
-    pub fn expand_hunk_above(&mut self, hunk_id: HunkId) {
-        let expansion = self.hunk_expansions.entry(hunk_id).or_default();
-        expansion.lines_above += self.config.display.context_expand_increment as usize;
-        // TODO: Reload diff with expanded context
+    /// Expand context for entire diff (git2 doesn't support per-hunk expansion)
+    pub fn expand_context(&mut self) {
+        let increment = self.config.display.context_expand_increment;
+        self.current_context_lines += increment;
+        self.load_diff_for_current_commit();
+        // Reset scroll to show the expanded context
+        self.scroll_offset = 0;
     }
 
-    /// Expand context below a specific hunk
-    pub fn expand_hunk_below(&mut self, hunk_id: HunkId) {
-        let expansion = self.hunk_expansions.entry(hunk_id).or_default();
-        expansion.lines_below += self.config.display.context_expand_increment as usize;
-        // TODO: Reload diff with expanded context
+    /// Reset context to default
+    pub fn reset_context(&mut self) {
+        self.current_context_lines = self.config.display.context_lines;
+        self.load_diff_for_current_commit();
+        self.scroll_offset = 0;
+    }
+
+    /// Expand context for a specific hunk (legacy - git2 expands entire diff)
+    pub fn expand_hunk_above(&mut self, _hunk_id: HunkId) {
+        self.expand_context();
+    }
+
+    /// Expand context below a specific hunk (legacy - git2 expands entire diff)
+    pub fn expand_hunk_below(&mut self, _hunk_id: HunkId) {
+        self.expand_context();
     }
 
     /// Load diff for currently selected commit
     fn load_diff_for_current_commit(&mut self) {
         if let Some(commit) = self.selected_commit() {
-            // Generate diff
+            // Generate diff with current context level
             let diff_options = crate::git::DiffOptions {
-                context_lines: self.config.display.context_lines,
+                context_lines: self.current_context_lines,
             };
 
             match crate::git::generate_diff(&self.repo, commit.id, &diff_options) {

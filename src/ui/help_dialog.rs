@@ -64,8 +64,19 @@ pub fn render(f: &mut Frame, area: Rect) {
             Span::raw("  - Inline diff mode"),
         ]),
         Line::from(""),
+        Line::from(Span::styled("Context", theme.header_style())),
+        Line::from(vec![
+            Span::styled("  e", theme.selected_style()),
+            Span::raw("  - Expand context (show more surrounding lines)"),
+        ]),
+        Line::from(vec![
+            Span::styled("  r", theme.selected_style()),
+            Span::raw("  - Reset context to default"),
+        ]),
+        Line::from(""),
         Line::from(Span::styled("Mouse", theme.header_style())),
         Line::from("  Scroll wheel - Navigate diff"),
+        Line::from("  Click commit - Select commit"),
         Line::from(""),
         Line::from(Span::styled("Press ? or ESC to close", theme.context_style())),
     ];

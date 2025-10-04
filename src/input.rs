@@ -50,12 +50,13 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             app.next_file();
         }
 
-        // Context expansion (placeholder - needs cursor position)
-        (KeyCode::Char('e'), KeyModifiers::NONE) => {
-            // TODO: Expand context below current line
+        // Context expansion (expands entire diff since git2 doesn't support per-hunk)
+        (KeyCode::Char('e'), KeyModifiers::NONE) | (KeyCode::Char('E'), KeyModifiers::SHIFT) => {
+            app.expand_context();
         }
-        (KeyCode::Char('E'), KeyModifiers::SHIFT) => {
-            // TODO: Expand context above current line
+        // Reset context to default
+        (KeyCode::Char('r'), KeyModifiers::NONE) | (KeyCode::Char('R'), KeyModifiers::SHIFT) => {
+            app.reset_context();
         }
 
         // Comments (placeholder for future implementation)
