@@ -175,9 +175,16 @@ pub fn parse_diff(diff_text: &str) -> Result<Vec<FileDiff>> {
             file.hunks.push(hunk);
         }
 
-        // Estimate file line count from last hunk
-        if let Some(last_hunk) = file.hunks.last() {
-            file.new_file_lines = Some(last_hunk.new_start + last_hunk.new_lines);
+        // Calculate file line count from maximum line number seen
+        let mut max_line = 0;
+        for hunk in &file.hunks {
+            // Get the highest line number from this hunk
+            let hunk_end = hunk.new_start + hunk.new_lines.saturating_sub(1);
+            max_line = max_line.max(hunk_end);
+        }
+
+        if max_line > 0 {
+            file.new_file_lines = Some(max_line);
         }
 
         files.push(file);

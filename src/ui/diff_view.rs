@@ -57,17 +57,17 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
         let left_area = columns[0];
         let right_area = columns[1];
 
-        // Create left (old/removed) and right (new/added) line sets
-        let (left_lines, right_lines) = create_side_by_side_lines(app, theme);
+        let visible_lines_count = left_area.height.saturating_sub(2) as usize;
 
-        // Render left side (removed lines)
-        let left_visible: Vec<Line> = left_lines
-            .into_iter()
-            .skip(app.scroll_offset)
-            .take(left_area.height.saturating_sub(2) as usize)
-            .collect();
+        // Create only visible lines for side-by-side view to save memory
+        let (left_lines, right_lines) = create_side_by_side_lines(
+            app,
+            theme,
+            app.scroll_offset,
+            visible_lines_count,
+        );
 
-        let left_paragraph = Paragraph::new(left_visible)
+        let left_paragraph = Paragraph::new(left_lines)
             .block(
                 Block::default()
                     .title(format!(" Old: {} ", file.old_path))
@@ -77,13 +77,7 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
             .wrap(Wrap { trim: false });
 
         // Render right side (added lines)
-        let right_visible: Vec<Line> = right_lines
-            .into_iter()
-            .skip(app.scroll_offset)
-            .take(right_area.height.saturating_sub(2) as usize)
-            .collect();
-
-        let right_paragraph = Paragraph::new(right_visible)
+        let right_paragraph = Paragraph::new(right_lines)
             .block(
                 Block::default()
                     .title(format!(" New: {} ", file.new_path))
@@ -239,51 +233,77 @@ fn format_hunk_line<'a>(hunk_line: &HunkLine, theme: &Theme) -> Line<'a> {
 }
 
 /// Create side-by-side diff lines (left: old/removed, right: new/added)
-fn create_side_by_side_lines<'a>(app: &App, theme: &Theme) -> (Vec<Line<'a>>, Vec<Line<'a>>) {
-    let mut left_lines = Vec::new();
-    let mut right_lines = Vec::new();
+/// Only creates lines within the visible window to save memory on large diffs
+fn create_side_by_side_lines<'a>(
+    app: &App,
+    theme: &Theme,
+    skip: usize,
+    limit: usize,
+) -> (Vec<Line<'a>>, Vec<Line<'a>>) {
+    let mut left_lines = Vec::with_capacity(limit);
+    let mut right_lines = Vec::with_capacity(limit);
+    let mut current_line = 0;
+    let end_line = skip + limit;
 
     if let Some(file) = app.selected_file() {
         // Show hunks
         for hunk in &file.hunks {
             // Hunk header on both sides
-            left_lines.push(Line::from(vec![Span::styled(
-                hunk.header.clone(),
-                theme.context_style(),
-            )]));
-            right_lines.push(Line::from(vec![Span::styled(
-                hunk.header.clone(),
-                theme.context_style(),
-            )]));
+            if current_line >= skip && current_line < end_line {
+                left_lines.push(Line::from(vec![Span::styled(
+                    hunk.header.clone(),
+                    theme.context_style(),
+                )]));
+                right_lines.push(Line::from(vec![Span::styled(
+                    hunk.header.clone(),
+                    theme.context_style(),
+                )]));
+            }
+            current_line += 1;
+            if current_line >= end_line {
+                break;
+            }
 
             // Process hunk lines
             for hunk_line in &hunk.lines {
-                match hunk_line.line_type {
-                    LineType::Context => {
-                        // Context appears on both sides
-                        let left_line = format_side_line(hunk_line, theme, true);
-                        let right_line = format_side_line(hunk_line, theme, false);
-                        left_lines.push(left_line);
-                        right_lines.push(right_line);
+                if current_line >= skip && current_line < end_line {
+                    match hunk_line.line_type {
+                        LineType::Context => {
+                            // Context appears on both sides
+                            let left_line = format_side_line(hunk_line, theme, true);
+                            let right_line = format_side_line(hunk_line, theme, false);
+                            left_lines.push(left_line);
+                            right_lines.push(right_line);
+                        }
+                        LineType::Removed => {
+                            // Removed only on left, blank on right
+                            let left_line = format_side_line(hunk_line, theme, true);
+                            left_lines.push(left_line);
+                            right_lines.push(Line::from(""));
+                        }
+                        LineType::Added => {
+                            // Added only on right, blank on left
+                            let right_line = format_side_line(hunk_line, theme, false);
+                            left_lines.push(Line::from(""));
+                            right_lines.push(right_line);
+                        }
                     }
-                    LineType::Removed => {
-                        // Removed only on left, blank on right
-                        let left_line = format_side_line(hunk_line, theme, true);
-                        left_lines.push(left_line);
-                        right_lines.push(Line::from(""));
-                    }
-                    LineType::Added => {
-                        // Added only on right, blank on left
-                        let right_line = format_side_line(hunk_line, theme, false);
-                        left_lines.push(Line::from(""));
-                        right_lines.push(right_line);
-                    }
+                }
+                current_line += 1;
+                if current_line >= end_line {
+                    break;
                 }
             }
 
             // Empty line between hunks
-            left_lines.push(Line::from(""));
-            right_lines.push(Line::from(""));
+            if current_line >= skip && current_line < end_line {
+                left_lines.push(Line::from(""));
+                right_lines.push(Line::from(""));
+            }
+            current_line += 1;
+            if current_line >= end_line {
+                break;
+            }
         }
     }
 

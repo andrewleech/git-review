@@ -144,15 +144,54 @@ impl App {
         }
     }
 
-    /// Scroll diff view
+    /// Scroll diff view with bounds checking
     pub fn scroll(&mut self, amount: isize) {
+        let content_lines = self.calculate_content_lines();
+        let visible_height = self.terminal_height.saturating_sub(3) as usize; // header + footer + borders
+        let max_scroll = content_lines.saturating_sub(visible_height);
+
         if amount < 0 {
             self.scroll_offset = self.scroll_offset.saturating_sub(amount.unsigned_abs());
             self.cursor_line = self.cursor_line.saturating_sub(amount.unsigned_abs());
         } else {
-            self.scroll_offset = self.scroll_offset.saturating_add(amount as usize);
-            self.cursor_line = self.cursor_line.saturating_add(amount as usize);
+            let new_offset = self.scroll_offset.saturating_add(amount as usize);
+            self.scroll_offset = new_offset.min(max_scroll);
+            self.cursor_line = self.cursor_line.saturating_add(amount as usize).min(content_lines);
         }
+    }
+
+    /// Calculate total number of lines in current diff view
+    fn calculate_content_lines(&self) -> usize {
+        let mut total = 0;
+
+        for (file_idx, file) in self.current_files.iter().enumerate() {
+            // File separator (except first file)
+            if file_idx > 0 {
+                total += 3; // blank + separator + blank
+            }
+
+            // File header
+            total += 3; // old path + new path + blank
+
+            // Hunks
+            for hunk in &file.hunks {
+                total += 1; // hunk header
+                total += hunk.lines.len();
+                total += 1; // blank line after hunk
+
+                // Account for expand buttons
+                if hunk.available_lines_above() > 0 {
+                    total += 1;
+                }
+                if let Some(file_lines) = file.new_file_lines {
+                    if hunk.can_expand_below(file_lines) {
+                        total += 1;
+                    }
+                }
+            }
+        }
+
+        total
     }
 
     /// Handle terminal resize

@@ -86,7 +86,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
 }
 
 /// Handle mouse input
-pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App, terminal_size: (u16, u16)) -> Result<()> {
+pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
     match mouse.kind {
         MouseEventKind::ScrollDown => {
             app.scroll(3);
@@ -95,7 +95,7 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App, terminal_size: (u16,
             app.scroll(-3);
         }
         MouseEventKind::Down(_button) => {
-            handle_mouse_click(mouse, app, terminal_size)?;
+            handle_mouse_click(mouse, app)?;
         }
         _ => {}
     }
@@ -104,8 +104,10 @@ pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App, terminal_size: (u16,
 }
 
 /// Handle mouse click events
-fn handle_mouse_click(mouse: MouseEvent, app: &mut App, terminal_size: (u16, u16)) -> Result<()> {
-    let (width, height) = terminal_size;
+fn handle_mouse_click(mouse: MouseEvent, app: &mut App) -> Result<()> {
+    // Use stored terminal size to avoid race condition on resize
+    let width = app.terminal_width;
+    let height = app.terminal_height;
 
     // Calculate layout to determine clickable regions
     let layout_info = crate::ui::layout::calculate_layout(
