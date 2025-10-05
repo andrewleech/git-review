@@ -68,6 +68,7 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
             app.scroll_offset,
             visible_lines_count,
             max_width,
+            app.horizontal_scroll,
         );
 
         let left_paragraph = Paragraph::new(left_lines)

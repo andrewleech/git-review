@@ -30,6 +30,7 @@ pub struct App {
     pub log_pane_visible: bool,
     pub help_visible: bool,
     pub scroll_offset: usize,
+    pub horizontal_scroll: usize, // Horizontal scroll offset for side-by-side mode
     pub cursor_line: usize, // Current line in diff view
     pub terminal_width: u16,
     pub terminal_height: u16,
@@ -67,6 +68,7 @@ impl App {
             log_pane_visible: true,
             help_visible: false,
             scroll_offset: 0,
+            horizontal_scroll: 0,
             cursor_line: 0,
             terminal_width: width,
             terminal_height: height,
@@ -91,6 +93,7 @@ impl App {
         if index < self.commits.len() && index != self.selected_commit_index {
             self.selected_commit_index = index;
             self.scroll_offset = 0;
+            self.reset_horizontal_scroll();
             self.reset_context(); // Reset to default context for new commit
         }
     }
@@ -100,6 +103,7 @@ impl App {
         if self.selected_commit_index + 1 < self.commits.len() {
             self.selected_commit_index += 1;
             self.scroll_offset = 0;
+            self.reset_horizontal_scroll();
             self.reset_context(); // Reset to default context for new commit
         }
     }
@@ -109,6 +113,7 @@ impl App {
         if self.selected_commit_index > 0 {
             self.selected_commit_index -= 1;
             self.scroll_offset = 0;
+            self.reset_horizontal_scroll();
             self.reset_context(); // Reset to default context for new commit
         }
     }
@@ -118,6 +123,7 @@ impl App {
         if self.selected_file_index + 1 < self.current_files.len() {
             self.selected_file_index += 1;
             self.scroll_offset = 0;
+            self.reset_horizontal_scroll();
         }
     }
 
@@ -126,6 +132,7 @@ impl App {
         if self.selected_file_index > 0 {
             self.selected_file_index -= 1;
             self.scroll_offset = 0;
+            self.reset_horizontal_scroll();
         }
     }
 
@@ -142,13 +149,15 @@ impl App {
     /// Set diff mode
     pub fn set_diff_mode(&mut self, mode: DiffMode) {
         self.config.display.diff_mode = mode;
+        // Reset horizontal scroll when switching modes
+        self.reset_horizontal_scroll();
         // Save config - log error but don't fail
         if let Err(e) = self.config.save() {
             eprintln!("Warning: Failed to save config: {}", e);
         }
     }
 
-    /// Scroll diff view with bounds checking
+    /// Scroll diff view vertically with bounds checking
     pub fn scroll(&mut self, amount: isize) {
         let content_lines = self.calculate_content_lines();
         let visible_height = self.terminal_height.saturating_sub(3) as usize; // header + footer + borders
@@ -162,6 +171,22 @@ impl App {
             self.scroll_offset = new_offset.min(max_scroll);
             self.cursor_line = self.cursor_line.saturating_add(amount as usize).min(content_lines);
         }
+    }
+
+    /// Scroll diff view horizontally (side-by-side mode only)
+    pub fn scroll_horizontal(&mut self, amount: isize) {
+        if amount < 0 {
+            // Scroll left
+            self.horizontal_scroll = self.horizontal_scroll.saturating_sub(amount.unsigned_abs());
+        } else {
+            // Scroll right - no upper bound check, will be handled during rendering
+            self.horizontal_scroll = self.horizontal_scroll.saturating_add(amount as usize);
+        }
+    }
+
+    /// Reset horizontal scroll to start
+    pub fn reset_horizontal_scroll(&mut self) {
+        self.horizontal_scroll = 0;
     }
 
     /// Calculate total number of lines in current diff view

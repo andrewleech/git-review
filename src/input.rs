@@ -26,12 +26,26 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             app.set_diff_mode(DiffMode::Inline);
         }
 
-        // Navigation
+        // Navigation - Vertical
         (KeyCode::Char('j'), KeyModifiers::NONE) | (KeyCode::Down, KeyModifiers::NONE) => {
             app.scroll(1);
         }
         (KeyCode::Char('k'), KeyModifiers::NONE) | (KeyCode::Up, KeyModifiers::NONE) => {
             app.scroll(-1);
+        }
+
+        // Navigation - Horizontal (side-by-side mode only)
+        (KeyCode::Char('h'), KeyModifiers::NONE) | (KeyCode::Left, KeyModifiers::NONE) => {
+            if app.config.display.diff_mode == DiffMode::SideBySide {
+                let amount = app.config.display.horizontal_scroll_amount as isize;
+                app.scroll_horizontal(-amount);
+            }
+        }
+        (KeyCode::Char('l'), KeyModifiers::NONE) | (KeyCode::Right, KeyModifiers::NONE) => {
+            if app.config.display.diff_mode == DiffMode::SideBySide {
+                let amount = app.config.display.horizontal_scroll_amount as isize;
+                app.scroll_horizontal(amount);
+            }
         }
 
         // Commit navigation

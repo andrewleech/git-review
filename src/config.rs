@@ -27,6 +27,9 @@ pub struct DisplayConfig {
     #[serde(default = "default_context_expand_increment")]
     pub context_expand_increment: u32,
 
+    #[serde(default = "default_horizontal_scroll_amount")]
+    pub horizontal_scroll_amount: u32,
+
     #[serde(default = "default_syntax_theme")]
     pub syntax_theme: String,
 }
@@ -39,6 +42,10 @@ fn default_context_expand_increment() -> u32 {
     8
 }
 
+fn default_horizontal_scroll_amount() -> u32 {
+    4
+}
+
 fn default_syntax_theme() -> String {
     "base16-ocean.dark".to_string()
 }
@@ -49,6 +56,7 @@ impl Default for DisplayConfig {
             diff_mode: DiffMode::default(),
             context_lines: default_context_lines(),
             context_expand_increment: default_context_expand_increment(),
+            horizontal_scroll_amount: default_horizontal_scroll_amount(),
             syntax_theme: default_syntax_theme(),
         }
     }

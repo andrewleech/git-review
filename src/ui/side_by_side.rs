@@ -6,13 +6,14 @@ use ratatui::text::{Line, Span};
 /// Create side-by-side diff lines (left: old/removed, right: new/added)
 /// Only creates lines within the visible window to save memory on large diffs
 /// Aligns removed and added lines side-by-side for proper comparison
-/// Lines are truncated to max_width to prevent wrapping which breaks alignment
+/// Lines are horizontally scrolled by horizontal_offset and truncated to max_width
 pub fn create_side_by_side_lines<'a>(
     app: &App,
     theme: &Theme,
     skip: usize,
     limit: usize,
     max_width: usize,
+    horizontal_offset: usize,
 ) -> (Vec<Line<'a>>, Vec<Line<'a>>) {
     let mut left_lines = Vec::with_capacity(limit);
     let mut right_lines = Vec::with_capacity(limit);
@@ -22,9 +23,9 @@ pub fn create_side_by_side_lines<'a>(
     if let Some(file) = app.selected_file() {
         // Show hunks
         for hunk in &file.hunks {
-            // Hunk header on both sides (truncated if needed)
+            // Hunk header on both sides (scrolled and truncated if needed)
             if current_line >= skip && current_line < end_line {
-                let header = truncate_line(&hunk.header, max_width);
+                let header = apply_horizontal_scroll(&hunk.header, horizontal_offset, max_width);
                 left_lines.push(Line::from(vec![Span::styled(
                     header.clone(),
                     theme.context_style(),
@@ -48,8 +49,8 @@ pub fn create_side_by_side_lines<'a>(
                     LineType::Context => {
                         // Context appears on both sides
                         if current_line >= skip {
-                            let left_line = format_side_line(hunk_line, theme, true, max_width);
-                            let right_line = format_side_line(hunk_line, theme, false, max_width);
+                            let left_line = format_side_line(hunk_line, theme, true, max_width, horizontal_offset);
+                            let right_line = format_side_line(hunk_line, theme, false, max_width, horizontal_offset);
                             left_lines.push(left_line);
                             right_lines.push(right_line);
                         }
@@ -80,9 +81,9 @@ pub fn create_side_by_side_lines<'a>(
                             }
 
                             if current_line >= skip {
-                                let left = removed_lines.get(j).map(|line| format_side_line(line, theme, true, max_width))
+                                let left = removed_lines.get(j).map(|line| format_side_line(line, theme, true, max_width, horizontal_offset))
                                     .unwrap_or_else(|| Line::from(""));
-                                let right = added_lines.get(j).map(|line| format_side_line(line, theme, false, max_width))
+                                let right = added_lines.get(j).map(|line| format_side_line(line, theme, false, max_width, horizontal_offset))
                                     .unwrap_or_else(|| Line::from(""));
 
                                 left_lines.push(left);
@@ -94,7 +95,7 @@ pub fn create_side_by_side_lines<'a>(
                     LineType::Added => {
                         // Standalone added lines (not following removed)
                         if current_line >= skip {
-                            let right_line = format_side_line(hunk_line, theme, false, max_width);
+                            let right_line = format_side_line(hunk_line, theme, false, max_width, horizontal_offset);
                             left_lines.push(Line::from(""));
                             right_lines.push(right_line);
                         }
@@ -119,8 +120,14 @@ pub fn create_side_by_side_lines<'a>(
     (left_lines, right_lines)
 }
 
-/// Format a line for side-by-side view, truncating if needed
-fn format_side_line<'a>(hunk_line: &HunkLine, theme: &Theme, is_left: bool, max_width: usize) -> Line<'a> {
+/// Format a line for side-by-side view with horizontal scrolling
+fn format_side_line<'a>(
+    hunk_line: &HunkLine,
+    theme: &Theme,
+    is_left: bool,
+    max_width: usize,
+    horizontal_offset: usize,
+) -> Line<'a> {
     let (prefix, style) = match hunk_line.line_type {
         LineType::Added => ("+", theme.added_style()),
         LineType::Removed => ("-", theme.removed_style()),
@@ -139,24 +146,52 @@ fn format_side_line<'a>(hunk_line: &HunkLine, theme: &Theme, is_left: bool, max_
             .unwrap_or_else(|| "     ".to_string())
     };
 
-    let mut content = format!("{}{}{}", line_num, prefix, hunk_line.content);
+    // Build full line (line number doesn't scroll, only content)
+    let full_content = format!("{}{}", prefix, hunk_line.content);
 
-    // Truncate if needed to prevent wrapping (which breaks alignment)
-    if content.len() > max_width {
-        content.truncate(max_width.saturating_sub(3)); // Leave room for "..."
-        content.push_str("...");
-    }
+    // Apply horizontal scroll to content only
+    let scrolled_content = apply_horizontal_scroll(&full_content, horizontal_offset, max_width.saturating_sub(line_num.len()));
 
-    Line::from(vec![Span::styled(content, style)])
+    // Combine line number with scrolled content
+    let display = format!("{}{}", line_num, scrolled_content);
+
+    Line::from(vec![Span::styled(display, style)])
 }
 
-/// Truncate a line to max_width with ellipsis indicator
-fn truncate_line(line: &str, max_width: usize) -> String {
-    if line.len() > max_width {
-        let mut truncated = line[..max_width.saturating_sub(3)].to_string();
-        truncated.push_str("...");
-        truncated
-    } else {
-        line.to_string()
+/// Apply horizontal scroll with indicators
+fn apply_horizontal_scroll(line: &str, offset: usize, max_width: usize) -> String {
+    let chars: Vec<char> = line.chars().collect();
+
+    if chars.is_empty() {
+        return String::new();
     }
+
+    let start_idx = offset.min(chars.len());
+    let has_left = start_idx > 0;
+
+    // Reserve space for indicators
+    let available_width = if has_left {
+        max_width.saturating_sub(1) // Space for '<'
+    } else {
+        max_width
+    };
+
+    let end_idx = (start_idx + available_width).min(chars.len());
+    let has_right = end_idx < chars.len();
+
+    // Adjust end if we need space for '>'
+    let final_end = if has_right {
+        end_idx.saturating_sub(1)
+    } else {
+        end_idx
+    };
+
+    let visible: String = chars[start_idx..final_end].iter().collect();
+
+    format!(
+        "{}{}{}",
+        if has_left { "<" } else { "" },
+        visible,
+        if has_right { ">" } else { "" }
+    )
 }
