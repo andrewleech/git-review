@@ -58,6 +58,8 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
         let right_area = columns[1];
 
         let visible_lines_count = left_area.height.saturating_sub(2) as usize;
+        // Account for borders when calculating content width
+        let max_width = left_area.width.saturating_sub(2) as usize;
 
         // Create only visible lines for side-by-side view to save memory
         let (left_lines, right_lines) = crate::ui::side_by_side::create_side_by_side_lines(
@@ -65,6 +67,7 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
             theme,
             app.scroll_offset,
             visible_lines_count,
+            max_width,
         );
 
         let left_paragraph = Paragraph::new(left_lines)
@@ -73,8 +76,7 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
                     .title(format!(" Old: {} ", file.old_path))
                     .borders(Borders::ALL)
                     .border_style(theme.border_style()),
-            )
-            .wrap(Wrap { trim: false });
+            );
 
         // Render right side (added lines)
         let right_paragraph = Paragraph::new(right_lines)
@@ -83,8 +85,7 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
                     .title(format!(" New: {} ", file.new_path))
                     .borders(Borders::ALL)
                     .border_style(theme.border_style()),
-            )
-            .wrap(Wrap { trim: false });
+            );
 
         f.render_widget(left_paragraph, left_area);
         f.render_widget(right_paragraph, right_area);

@@ -6,11 +6,13 @@ use ratatui::text::{Line, Span};
 /// Create side-by-side diff lines (left: old/removed, right: new/added)
 /// Only creates lines within the visible window to save memory on large diffs
 /// Aligns removed and added lines side-by-side for proper comparison
+/// Lines are truncated to max_width to prevent wrapping which breaks alignment
 pub fn create_side_by_side_lines<'a>(
     app: &App,
     theme: &Theme,
     skip: usize,
     limit: usize,
+    max_width: usize,
 ) -> (Vec<Line<'a>>, Vec<Line<'a>>) {
     let mut left_lines = Vec::with_capacity(limit);
     let mut right_lines = Vec::with_capacity(limit);
@@ -20,14 +22,15 @@ pub fn create_side_by_side_lines<'a>(
     if let Some(file) = app.selected_file() {
         // Show hunks
         for hunk in &file.hunks {
-            // Hunk header on both sides
+            // Hunk header on both sides (truncated if needed)
             if current_line >= skip && current_line < end_line {
+                let header = truncate_line(&hunk.header, max_width);
                 left_lines.push(Line::from(vec![Span::styled(
-                    hunk.header.clone(),
+                    header.clone(),
                     theme.context_style(),
                 )]));
                 right_lines.push(Line::from(vec![Span::styled(
-                    hunk.header.clone(),
+                    header,
                     theme.context_style(),
                 )]));
             }
@@ -45,8 +48,8 @@ pub fn create_side_by_side_lines<'a>(
                     LineType::Context => {
                         // Context appears on both sides
                         if current_line >= skip {
-                            let left_line = format_side_line(hunk_line, theme, true);
-                            let right_line = format_side_line(hunk_line, theme, false);
+                            let left_line = format_side_line(hunk_line, theme, true, max_width);
+                            let right_line = format_side_line(hunk_line, theme, false, max_width);
                             left_lines.push(left_line);
                             right_lines.push(right_line);
                         }
@@ -77,9 +80,9 @@ pub fn create_side_by_side_lines<'a>(
                             }
 
                             if current_line >= skip {
-                                let left = removed_lines.get(j).map(|line| format_side_line(line, theme, true))
+                                let left = removed_lines.get(j).map(|line| format_side_line(line, theme, true, max_width))
                                     .unwrap_or_else(|| Line::from(""));
-                                let right = added_lines.get(j).map(|line| format_side_line(line, theme, false))
+                                let right = added_lines.get(j).map(|line| format_side_line(line, theme, false, max_width))
                                     .unwrap_or_else(|| Line::from(""));
 
                                 left_lines.push(left);
@@ -91,7 +94,7 @@ pub fn create_side_by_side_lines<'a>(
                     LineType::Added => {
                         // Standalone added lines (not following removed)
                         if current_line >= skip {
-                            let right_line = format_side_line(hunk_line, theme, false);
+                            let right_line = format_side_line(hunk_line, theme, false, max_width);
                             left_lines.push(Line::from(""));
                             right_lines.push(right_line);
                         }
@@ -116,8 +119,8 @@ pub fn create_side_by_side_lines<'a>(
     (left_lines, right_lines)
 }
 
-/// Format a line for side-by-side view
-fn format_side_line<'a>(hunk_line: &HunkLine, theme: &Theme, is_left: bool) -> Line<'a> {
+/// Format a line for side-by-side view, truncating if needed
+fn format_side_line<'a>(hunk_line: &HunkLine, theme: &Theme, is_left: bool, max_width: usize) -> Line<'a> {
     let (prefix, style) = match hunk_line.line_type {
         LineType::Added => ("+", theme.added_style()),
         LineType::Removed => ("-", theme.removed_style()),
@@ -136,6 +139,24 @@ fn format_side_line<'a>(hunk_line: &HunkLine, theme: &Theme, is_left: bool) -> L
             .unwrap_or_else(|| "     ".to_string())
     };
 
-    let content = format!("{}{}{}", line_num, prefix, hunk_line.content);
+    let mut content = format!("{}{}{}", line_num, prefix, hunk_line.content);
+
+    // Truncate if needed to prevent wrapping (which breaks alignment)
+    if content.len() > max_width {
+        content.truncate(max_width.saturating_sub(3)); // Leave room for "..."
+        content.push_str("...");
+    }
+
     Line::from(vec![Span::styled(content, style)])
+}
+
+/// Truncate a line to max_width with ellipsis indicator
+fn truncate_line(line: &str, max_width: usize) -> String {
+    if line.len() > max_width {
+        let mut truncated = line[..max_width.saturating_sub(3)].to_string();
+        truncated.push_str("...");
+        truncated
+    } else {
+        line.to_string()
+    }
 }
