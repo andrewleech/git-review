@@ -5,6 +5,7 @@ pub mod help_dialog;
 pub mod hunk_expander;
 pub mod layout;
 pub mod log_pane;
+pub mod side_by_side;
 pub mod theme;
 
 use crate::app::App;
