@@ -10,11 +10,11 @@ use ratatui::{
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let theme = Theme::default();
 
-    // Show different shortcuts based on diff mode
+    // Show different shortcuts based on diff mode, with ?:help at the start for small screens
     let shortcuts = if app.config.display.diff_mode == crate::config::DiffMode::SideBySide {
-        " q:quit | space:log | s:side-by-side | i:inline | h/l:scroll-horiz | n/p:commit | PgUp/Dn:files | ?:help"
+        " ?:help | q:quit | space:log | s:side-by-side | i:inline | h/l:scroll-horiz | n/p:commit | PgUp/Dn:files"
     } else {
-        " q:quit | space:log | s:side-by-side | i:inline | n/p:commit | PgUp/Dn:files | e:expand | r:reset | ?:help"
+        " ?:help | q:quit | space:log | s:side-by-side | i:inline | n/p:commit | PgUp/Dn:files | e:expand | r:reset"
     };
 
     let footer = Paragraph::new(shortcuts)

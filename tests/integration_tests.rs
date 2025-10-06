@@ -122,6 +122,6 @@ fn test_config_defaults() {
     let config = Config::default();
     assert_eq!(config.display.context_lines, 8);
     assert_eq!(config.display.context_expand_increment, 8);
-    assert_eq!(config.ui.log_pane_width_ratio, 0.25);
+    assert_eq!(config.ui.log_pane_width_ratio, 0.35);
     assert!(config.ui.show_line_numbers);
 }

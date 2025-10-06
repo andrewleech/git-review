@@ -7,6 +7,21 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 ///
 /// Returns true if the app should exit
 pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
+    // When help is visible, only allow help toggle and ESC
+    if app.help_visible {
+        match (key.code, key.modifiers) {
+            (KeyCode::Char('?'), _) | (KeyCode::Char('/'), KeyModifiers::SHIFT) => {
+                app.toggle_help();
+                return Ok(false);
+            }
+            (KeyCode::Esc, KeyModifiers::NONE) => {
+                app.toggle_help();
+                return Ok(false);
+            }
+            _ => return Ok(false), // Ignore all other keys when help is visible
+        }
+    }
+
     match (key.code, key.modifiers) {
         // Quit
         (KeyCode::Char('q'), KeyModifiers::NONE) | (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
@@ -89,9 +104,7 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             app.toggle_help();
         }
         (KeyCode::Esc, KeyModifiers::NONE) => {
-            if app.help_visible {
-                app.toggle_help();
-            }
+            // ESC only handled here when help is not visible (would be caught above otherwise)
         }
 
         _ => {}
@@ -102,6 +115,11 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
 
 /// Handle mouse input
 pub fn handle_mouse_event(mouse: MouseEvent, app: &mut App) -> Result<()> {
+    // Ignore all mouse events when help is visible
+    if app.help_visible {
+        return Ok(());
+    }
+
     match mouse.kind {
         MouseEventKind::ScrollDown => {
             app.scroll(3);
