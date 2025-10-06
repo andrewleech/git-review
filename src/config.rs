@@ -72,7 +72,7 @@ pub struct UiConfig {
 }
 
 fn default_log_pane_width_ratio() -> f32 {
-    0.25
+    0.35
 }
 
 fn default_show_line_numbers() -> bool {
@@ -154,7 +154,7 @@ mod tests {
         assert_eq!(config.display.diff_mode, DiffMode::SideBySide);
         assert_eq!(config.display.context_lines, 8);
         assert_eq!(config.display.context_expand_increment, 8);
-        assert_eq!(config.ui.log_pane_width_ratio, 0.25);
+        assert_eq!(config.ui.log_pane_width_ratio, 0.35);
         assert!(config.ui.show_line_numbers);
     }
 

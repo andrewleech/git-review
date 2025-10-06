@@ -46,8 +46,8 @@ pub fn render(f: &mut Frame, area: Rect) {
             Span::raw("  - Next/previous commit"),
         ]),
         Line::from(vec![
-            Span::styled("  [/]", theme.selected_style()),
-            Span::raw("  - Next/previous file"),
+            Span::styled("  PgUp/PgDn", theme.selected_style()),
+            Span::raw("  - Previous/next file"),
         ]),
         Line::from(""),
         Line::from(Span::styled("View Modes", theme.header_style())),

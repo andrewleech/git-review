@@ -57,10 +57,10 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
         }
 
         // File navigation
-        (KeyCode::Char('['), KeyModifiers::NONE) => {
+        (KeyCode::PageUp, KeyModifiers::NONE) => {
             app.previous_file();
         }
-        (KeyCode::Char(']'), KeyModifiers::NONE) => {
+        (KeyCode::PageDown, KeyModifiers::NONE) => {
             app.next_file();
         }
 

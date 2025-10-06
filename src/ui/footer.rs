@@ -12,9 +12,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
     // Show different shortcuts based on diff mode
     let shortcuts = if app.config.display.diff_mode == crate::config::DiffMode::SideBySide {
-        " q:quit | space:log | s:side-by-side | i:inline | h/l:scroll-horiz | n/p:commit | ?:help"
+        " q:quit | space:log | s:side-by-side | i:inline | h/l:scroll-horiz | n/p:commit | PgUp/Dn:files | ?:help"
     } else {
-        " q:quit | space:log | s:side-by-side | i:inline | [ ]:files | n/p:commit | e:expand | r:reset | ?:help"
+        " q:quit | space:log | s:side-by-side | i:inline | n/p:commit | PgUp/Dn:files | e:expand | r:reset | ?:help"
     };
 
     let footer = Paragraph::new(shortcuts)
