@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage & Configuration - git-review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+        }
+
+        nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 2rem;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        code {
+            background: #f0f0f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f8;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f8f8;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .key {
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .config-box {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .tip {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .tip::before {
+            content: "💡 Tip: ";
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        footer {
+            background: #2d2d2d;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        ul {
+            margin-left: 2rem;
+            margin-top: 0.5rem;
+        }
+
+        li {
+            margin: 0.3rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Usage & Configuration</h1>
+        <p>Complete guide to using git-review</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="usage.html">Usage & Configuration</a>
+        <a href="https://github.com/andrewleech/git-review">GitHub</a>
+        <a href="https://crates.io/crates/git-review">crates.io</a>
+    </nav>
+
+    <div class="container">
+        <section id="keyboard-shortcuts">
+            <h2>Keyboard Shortcuts</h2>
+            <p>All keyboard shortcuts are accessible from the help dialog by pressing <code>?</code>.</p>
+
+            <h3>General</h3>
+            <table>
+                <tr>
+                    <th>Key</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td><span class="key">?</span></td>
+                    <td>Show/hide help dialog</td>
+                </tr>
+                <tr>
+                    <td><span class="key">q</span></td>
+                    <td>Quit application</td>
+                </tr>
+                <tr>
+                    <td><span class="key">Ctrl+C</span></td>
+                    <td>Quit application (alternative)</td>
+                </tr>
+                <tr>
+                    <td><span class="key">Esc</span></td>
+                    <td>Close help dialog</td>
+                </tr>
+            </table>
+
+            <h3>Navigation</h3>
+            <table>
+                <tr>
+                    <th>Key</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td><span class="key">j</span> / <span class="key">k</span></td>
+                    <td>Scroll diff view down/up (Vim-style)</td>
+                </tr>
+                <tr>
+                    <td><span class="key">↓</span> / <span class="key">↑</span></td>
+                    <td>Scroll diff view down/up (arrow keys)</td>
+                </tr>
+                <tr>
+                    <td><span class="key">h</span> / <span class="key">l</span></td>
+                    <td>Scroll horizontally left/right (side-by-side mode only)</td>
+                </tr>
+                <tr>
+                    <td><span class="key">←</span> / <span class="key">→</span></td>
+                    <td>Scroll horizontally left/right (arrow keys, side-by-side mode only)</td>
+                </tr>
+                <tr>
+                    <td><span class="key">n</span> / <span class="key">p</span></td>
+                    <td>Next/previous commit</td>
+                </tr>
+                <tr>
+                    <td><span class="key">PgDn</span> / <span class="key">PgUp</span></td>
+                    <td>Next/previous file within commit</td>
+                </tr>
+            </table>
+
+            <h3>View Modes</h3>
+            <table>
+                <tr>
+                    <th>Key</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td><span class="key">space</span></td>
+                    <td>Toggle commit log pane visibility</td>
+                </tr>
+                <tr>
+                    <td><span class="key">s</span></td>
+                    <td>Switch to side-by-side diff mode</td>
+                </tr>
+                <tr>
+                    <td><span class="key">i</span></td>
+                    <td>Switch to inline diff mode</td>
+                </tr>
+            </table>
+
+            <h3>Context Control</h3>
+            <table>
+                <tr>
+                    <th>Key</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td><span class="key">e</span></td>
+                    <td>Expand context (show more surrounding lines)</td>
+                </tr>
+                <tr>
+                    <td><span class="key">r</span></td>
+                    <td>Reset context to default</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                When viewing long lines in side-by-side mode, look for <code>&lt;</code> and <code>&gt;</code> indicators
+                showing that content is hidden. Use h/l keys to scroll horizontally.
+            </div>
+        </section>
+
+        <section id="mouse-support">
+            <h2>Mouse Support</h2>
+            <ul>
+                <li><strong>Scroll wheel</strong>: Navigate diff vertically</li>
+                <li><strong>Click commit</strong>: Select commit in log pane</li>
+            </ul>
+            <div class="tip">
+                Mouse support works seamlessly with keyboard navigation. Use whichever is more convenient!
+            </div>
+        </section>
+
+        <section id="command-line">
+            <h2>Command-Line Options</h2>
+            <pre><code>git-review [OPTIONS]
+
+Options:
+  -p, --path &lt;PATH&gt;     Path to git repository (defaults to current directory)
+  -b, --base &lt;BRANCH&gt;   Base branch to compare against
+  -c, --context &lt;LINES&gt; Initial context lines for diffs [default: 8]
+  -h, --help            Print help
+  -V, --version         Print version</code></pre>
+
+            <h3>Examples</h3>
+            <pre><code># Review current branch against origin/main
+git-review
+
+# Review with custom base branch
+git-review --base origin/develop
+
+# Start with more context lines
+git-review --context 12
+
+# Review a different repository
+git-review --path /path/to/repo</code></pre>
+        </section>
+
+        <section id="configuration">
+            <h2>Configuration</h2>
+            <p>Configuration is stored at <code>~/.config/git-review/config.toml</code>. The file is created automatically with defaults if it doesn't exist.</p>
+
+            <h3>Configuration File</h3>
+            <pre><code>[display]
+diff_mode = "side-by-side"           # or "inline"
+context_lines = 8                    # Initial context per hunk
+context_expand_increment = 8         # Lines added per expansion
+horizontal_scroll_amount = 4         # Chars scrolled per h/l keypress
+syntax_theme = "base16-ocean.dark"   # Syntax highlighting theme
+
+[ui]
+log_pane_width_ratio = 0.35          # % of terminal width (0.0-0.5)
+show_line_numbers = true             # Show line numbers in diffs</code></pre>
+
+            <h3>Display Settings</h3>
+            <div class="config-box">
+                <p><strong>diff_mode</strong>: Default diff viewing mode</p>
+                <ul>
+                    <li><code>"side-by-side"</code>: Two-column view (default)</li>
+                    <li><code>"inline"</code>: Single-column unified diff</li>
+                </ul>
+            </div>
+
+            <div class="config-box">
+                <p><strong>context_lines</strong>: Number of context lines shown around changes</p>
+                <ul>
+                    <li>Default: 8</li>
+                    <li>Increase for more context, decrease for more compact view</li>
+                </ul>
+            </div>
+
+            <div class="config-box">
+                <p><strong>context_expand_increment</strong>: Lines added each time you press 'e'</p>
+                <ul>
+                    <li>Default: 8</li>
+                    <li>Higher values = faster expansion</li>
+                </ul>
+            </div>
+
+            <div class="config-box">
+                <p><strong>horizontal_scroll_amount</strong>: Characters scrolled per h/l keypress</p>
+                <ul>
+                    <li>Default: 4</li>
+                    <li>Increase for faster horizontal navigation</li>
+                </ul>
+            </div>
+
+            <h3>UI Settings</h3>
+            <div class="config-box">
+                <p><strong>log_pane_width_ratio</strong>: Width of commit log pane as fraction of terminal</p>
+                <ul>
+                    <li>Default: 0.35 (35% of terminal width)</li>
+                    <li>Range: 0.0 - 0.5</li>
+                    <li>Adjust based on commit message length</li>
+                </ul>
+            </div>
+
+            <div class="tip">
+                Configuration changes are persisted when you change diff modes during runtime.
+                Manual edits to the config file take effect on next launch.
+            </div>
+        </section>
+
+        <section id="tips">
+            <h2>Tips & Tricks</h2>
+
+            <h3>Workflow Recommendations</h3>
+            <div class="tip">
+                Start with the log pane visible to get an overview of your commits, then press
+                <code>space</code> to hide it and get more screen space for diffs.
+            </div>
+
+            <div class="tip">
+                Use side-by-side mode for comparing changes, inline mode for reviewing sequential modifications.
+            </div>
+
+            <div class="tip">
+                If you see truncation indicators (<code>&lt;</code> or <code>&gt;</code>), remember you can
+                scroll horizontally with h/l keys in side-by-side mode.
+            </div>
+
+            <h3>Small Screens</h3>
+            <p>On 80-column terminals:</p>
+            <ul>
+                <li>Help shortcut (<code>?</code>) is shown first in footer to remain visible</li>
+                <li>Use inline mode for more horizontal space</li>
+                <li>Hide log pane with <code>space</code> for maximum diff area</li>
+            </ul>
+
+            <h3>Large Screens</h3>
+            <p>On wide terminals (150+ columns):</p>
+            <ul>
+                <li>Side-by-side mode shines with plenty of space</li>
+                <li>Keep log pane visible for quick commit navigation</li>
+                <li>Horizontal scrolling rarely needed</li>
+            </ul>
+
+            <h3>Keyboard-First Usage</h3>
+            <p>Maximize efficiency with these patterns:</p>
+            <ul>
+                <li><strong>Quick review</strong>: <code>j/k</code> to scroll, <code>n/p</code> for commits, <code>q</code> when done</li>
+                <li><strong>Deep dive</strong>: <code>e</code> to expand context, <code>h/l</code> for long lines, <code>PgUp/PgDn</code> between files</li>
+                <li><strong>Mode switching</strong>: <code>s</code> and <code>i</code> to compare view styles, <code>space</code> to toggle log</li>
+            </ul>
+        </section>
+
+        <section id="troubleshooting">
+            <h2>Troubleshooting</h2>
+
+            <h3>Terminal Not Resetting After Crash</h3>
+            <p>If the application crashes and your terminal is in a bad state:</p>
+            <pre><code># Reset terminal completely
+reset
+
+# Or manually restore
+tput cnorm  # Show cursor
+stty sane   # Reset terminal settings</code></pre>
+
+            <h3>Base Branch Not Found</h3>
+            <p>git-review tries to detect your base branch automatically. If it fails:</p>
+            <pre><code># Explicitly specify base branch
+git-review --base origin/main
+
+# Or ensure you have a standard base branch
+git fetch origin
+git branch --track main origin/main</code></pre>
+
+            <h3>Performance Issues</h3>
+            <p>For very large diffs:</p>
+            <ul>
+                <li>Reduce <code>context_lines</code> in config</li>
+                <li>Review files one at a time using <code>PgUp/PgDn</code></li>
+                <li>Consider reviewing smaller logical commits</li>
+            </ul>
+        </section>
+
+        <section id="contributing">
+            <h2>Contributing</h2>
+            <p>Contributions are welcome! Check out the <a href="https://github.com/andrewleech/git-review">GitHub repository</a> for:</p>
+            <ul>
+                <li>Bug reports and feature requests (Issues)</li>
+                <li>Code contributions (Pull Requests)</li>
+                <li>Development documentation (CLAUDE.md, PLAN.md)</li>
+            </ul>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Andrew Leech. Licensed under MIT License.</p>
+        <p>Built with Rust, ratatui, and git2</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>git-review - Terminal-based Code Review Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 2rem;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .feature {
+            padding: 1.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        .feature:hover {
+            border-color: #667eea;
+        }
+
+        .feature h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+
+        code {
+            background: #f0f0f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f8;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .install-box {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        footer {
+            background: #2d2d2d;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .screenshot {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        ul {
+            margin-left: 2rem;
+            margin-top: 0.5rem;
+        }
+
+        li {
+            margin: 0.3rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>git-review</h1>
+        <p>Terminal-based code review tool for git branches</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="usage.html">Usage & Configuration</a>
+        <a href="https://github.com/andrewleech/git-review">GitHub</a>
+        <a href="https://crates.io/crates/git-review">crates.io</a>
+    </nav>
+
+    <div class="container">
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                <strong>git-review</strong> is a powerful terminal-based code review tool that provides a GitHub-inspired
+                diff interface optimized for reviewing git branch changes before pushing to a pull request.
+                It works seamlessly on screens from 80x24 to 200x50+ and supports both side-by-side and inline diff modes.
+            </p>
+        </section>
+
+        <section id="features">
+            <h2>Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🎨 GitHub-Inspired Interface</h3>
+                    <p>Familiar color scheme and layout with intuitive navigation. Side-by-side diffs with proper alignment and horizontal scrolling for long lines.</p>
+                </div>
+                <div class="feature">
+                    <h3>📱 Responsive Layout</h3>
+                    <p>Adapts to your terminal size automatically. Works on small screens (80x24) up to large displays (200x50+).</p>
+                </div>
+                <div class="feature">
+                    <h3>⌨️ Keyboard-First</h3>
+                    <p>Efficient keyboard shortcuts for all operations. Vim-style navigation (j/k) with arrow key support.</p>
+                </div>
+                <div class="feature">
+                    <h3>🖱️ Mouse Support</h3>
+                    <p>Click to select commits, scroll with mouse wheel. Full keyboard/mouse integration.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔍 Context Expansion</h3>
+                    <p>Expand context to see more surrounding lines. Reset to default view with a single keypress.</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 Multiple View Modes</h3>
+                    <p>Switch between side-by-side and inline diff modes. Toggle commit log pane visibility.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation">
+            <h2>Installation</h2>
+
+            <h3>From crates.io (Recommended)</h3>
+            <div class="install-box">
+                <pre><code>cargo install git-review</code></pre>
+            </div>
+
+            <h3>From source</h3>
+            <div class="install-box">
+                <pre><code>git clone https://github.com/andrewleech/git-review
+cd git-review
+cargo build --release
+cargo install --path .</code></pre>
+            </div>
+
+            <h3>Binary downloads</h3>
+            <p>Pre-built binaries for Linux, macOS, and Windows are available from the <a href="https://github.com/andrewleech/git-review/releases">GitHub Releases page</a>.</p>
+        </section>
+
+        <section id="quick-start">
+            <h2>Quick Start</h2>
+            <p>Navigate to any git repository and run:</p>
+            <pre><code>git-review</code></pre>
+
+            <h3>Basic Usage</h3>
+            <ul>
+                <li>Press <code>?</code> to see all keyboard shortcuts</li>
+                <li>Use <code>j/k</code> or <code>↓/↑</code> to scroll through diffs</li>
+                <li>Press <code>n/p</code> to navigate between commits</li>
+                <li>Use <code>PgUp/PgDn</code> to move between files</li>
+                <li>Press <code>space</code> to toggle the commit log pane</li>
+                <li>Press <code>s</code> for side-by-side mode, <code>i</code> for inline mode</li>
+                <li>Press <code>q</code> to quit</li>
+            </ul>
+
+            <h3>Advanced Features</h3>
+            <ul>
+                <li><strong>Horizontal scrolling</strong>: In side-by-side mode, use <code>h/l</code> or <code>←/→</code> to view long lines</li>
+                <li><strong>Context expansion</strong>: Press <code>e</code> to expand context, <code>r</code> to reset</li>
+                <li><strong>Mouse navigation</strong>: Scroll with mouse wheel, click commits to select</li>
+            </ul>
+        </section>
+
+        <section id="screenshots">
+            <h2>Screenshots</h2>
+            <p><em>Screenshots will be added soon. For now, try it yourself!</em></p>
+            <!-- <img src="screenshots/side-by-side.png" alt="Side-by-side diff view" class="screenshot">
+            <img src="screenshots/inline.png" alt="Inline diff view" class="screenshot">
+            <img src="screenshots/log-pane.png" alt="Commit log pane" class="screenshot"> -->
+        </section>
+
+        <section id="next-steps">
+            <h2>Next Steps</h2>
+            <a href="usage.html" class="btn">View Full Documentation</a>
+            <a href="https://github.com/andrewleech/git-review" class="btn btn-secondary">View on GitHub</a>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Andrew Leech. Licensed under MIT License.</p>
+        <p>Built with Rust, ratatui, and git2</p>
+    </footer>
+</body>
+</html>
