@@ -1,49 +1,61 @@
 Output docs/screenshots/test.gif
-Output docs/screenshots/test.png
 
 Set Width 1400
 Set Height 800
 Set FontSize 14
 Set Theme "Catppuccin Mocha"
 
-Type "export PATH=$PATH:~/.cargo/bin"
+# Build release binary (hidden from screenshots)
+Hide
+Type "cd ~/git-review && cargo build --release 2>&1"
+Enter
+Sleep 20s
+Show
+
+Type "cd ~/git-review"
+Enter
+
+Type "clear"
+Enter
+
+# Create demo branch from origin/main, then cherry-pick last 6 commits
+Type "git checkout -b temp/screenshots origin/main 2>/dev/null || (git branch -D temp/screenshots && git checkout -b temp/screenshots origin/main)"
 Enter
 Sleep 500ms
 
-Type "cd /tmp/tmp.cqQtc7HF2G"
+Type "git cherry-pick HEAD@{1}~5..HEAD@{1}"
 Enter
-Sleep 500ms
+Sleep 1s
 
-Type "../../../home/corona/git-review/target/release/git-review"
+Type "clear"
 Enter
 
-# Wait for app to load
-Sleep 3s
+# Run git-review (shows cherry-picked commits)
+Type "./target/release/git-review"
+Enter
+Sleep 2s
 
-# Take a screenshot of side-by-side mode
+# Screenshot side-by-side mode
 Screenshot docs/screenshots/side-by-side.png
 Sleep 1s
 
 # Switch to inline mode
 Type "i"
 Sleep 1s
-
-# Screenshot inline mode
 Screenshot docs/screenshots/inline.png
-Sleep 1s
 
-# Show help dialog
+# Show help
 Type "?"
 Sleep 1s
-
-# Screenshot help
 Screenshot docs/screenshots/help.png
-Sleep 1s
 
-# Close help
+# Close help and quit
 Type "?"
-Sleep 500ms
-
-# Quit
+Sleep 300ms
 Type "q"
 Sleep 500ms
+
+# Cleanup branch
+Type "git checkout main && git branch -D temp/screenshots"
+Enter
+Sleep 300ms
