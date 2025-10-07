@@ -483,11 +483,12 @@ Contents:
 - [x] Error handling and messages
 - [x] Performance optimization (windowed rendering)
 
-### Phase 7: Documentation & Release
+### Phase 7: Documentation & Release ✓
 - [x] Write comprehensive tests (22 passing)
-- [ ] Create termshot screenshots
-- [ ] Build GitHub Pages site
-- [ ] Initial release (v0.1.0)
+- [x] Update README.md with current features
+- [x] Build GitHub Pages site (index.html, usage.html)
+- [ ] Create termshot screenshots (deferred, can be added post-release)
+- [ ] Initial release (v0.1.0) - Ready!
 
 ## Maintenance Notes
 

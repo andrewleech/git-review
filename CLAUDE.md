@@ -210,12 +210,26 @@ In-module tests (`#[cfg(test)]`) for:
 - Optimized side-by-side rendering memory usage (windowed rendering)
 - Improved file line count estimation
 - Implemented context expansion with 'e' and 'r' keys
+- Fixed side-by-side alignment with proper line pairing
+- Added horizontal scrolling for long lines (h/l keys with visual indicators)
+- Changed file navigation to PgUp/PgDn keys
+- Increased log pane width to 35% for better commit message visibility
+- Fixed help dialog to block background scrolling
+- Moved ? shortcut to start of footer for small screen visibility
+
+### Release Readiness (v0.1.0)
+- [x] Core functionality complete (all features working)
+- [x] 22 tests passing (17 unit + 5 integration)
+- [x] Documentation updated (README.md, PLAN.md, CLAUDE.md)
+- [x] GitHub Pages site created (index.html, usage.html)
+- [x] CI/CD pipeline configured (.github/workflows/ci-cd.yml)
+- [x] Release script ready (release.sh)
 
 ### Pending Features (Future Versions)
-- [ ] Integrate syntax highlighting into diff rendering
-- [ ] Add comment dialog UI
+- [ ] Integrate syntax highlighting into diff rendering (module exists)
+- [ ] Add comment dialog UI (backend complete)
 - [ ] Connect comment system to keyboard shortcuts ('c', 'v', 'd')
-- [ ] GitHub Pages documentation site with termshot screenshots
+- [ ] Terminal screenshots with termshot or vhs
 
 ### Code Quality Metrics
 - **Files**: 21 Rust source files
