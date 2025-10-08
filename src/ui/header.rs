@@ -21,11 +21,7 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
                 commit.summary()
             )
         } else {
-            format!(
-                " {} | No files | {}",
-                commit.short_id,
-                commit.summary()
-            )
+            format!(" {} | No files | {}", commit.short_id, commit.summary())
         }
     } else {
         " No commit selected".to_string()

@@ -23,11 +23,7 @@ impl SyntaxHighlighter {
     /// Get syntax highlighting for a code snippet
     ///
     /// Returns a vector of (text, Style) tuples for each segment
-    pub fn highlight_line(
-        &self,
-        line: &str,
-        file_extension: &str,
-    ) -> Result<Vec<(String, Style)>> {
+    pub fn highlight_line(&self, line: &str, file_extension: &str) -> Result<Vec<(String, Style)>> {
         let syntax = SYNTAX_SET
             .find_syntax_by_extension(file_extension)
             .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
@@ -56,10 +52,7 @@ impl SyntaxHighlighter {
 
     /// Detect file extension from path
     pub fn detect_extension(file_path: &str) -> &str {
-        file_path
-            .rsplit('.')
-            .next()
-            .unwrap_or("txt")
+        file_path.rsplit('.').next().unwrap_or("txt")
     }
 }
 

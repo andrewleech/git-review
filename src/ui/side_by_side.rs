@@ -49,8 +49,20 @@ pub fn create_side_by_side_lines<'a>(
                     LineType::Context => {
                         // Context appears on both sides
                         if current_line >= skip {
-                            let left_line = format_side_line(hunk_line, theme, true, max_width, horizontal_offset);
-                            let right_line = format_side_line(hunk_line, theme, false, max_width, horizontal_offset);
+                            let left_line = format_side_line(
+                                hunk_line,
+                                theme,
+                                true,
+                                max_width,
+                                horizontal_offset,
+                            );
+                            let right_line = format_side_line(
+                                hunk_line,
+                                theme,
+                                false,
+                                max_width,
+                                horizontal_offset,
+                            );
                             left_lines.push(left_line);
                             right_lines.push(right_line);
                         }
@@ -81,9 +93,29 @@ pub fn create_side_by_side_lines<'a>(
                             }
 
                             if current_line >= skip {
-                                let left = removed_lines.get(j).map(|line| format_side_line(line, theme, true, max_width, horizontal_offset))
+                                let left = removed_lines
+                                    .get(j)
+                                    .map(|line| {
+                                        format_side_line(
+                                            line,
+                                            theme,
+                                            true,
+                                            max_width,
+                                            horizontal_offset,
+                                        )
+                                    })
                                     .unwrap_or_else(|| Line::from(""));
-                                let right = added_lines.get(j).map(|line| format_side_line(line, theme, false, max_width, horizontal_offset))
+                                let right = added_lines
+                                    .get(j)
+                                    .map(|line| {
+                                        format_side_line(
+                                            line,
+                                            theme,
+                                            false,
+                                            max_width,
+                                            horizontal_offset,
+                                        )
+                                    })
                                     .unwrap_or_else(|| Line::from(""));
 
                                 left_lines.push(left);
@@ -95,7 +127,13 @@ pub fn create_side_by_side_lines<'a>(
                     LineType::Added => {
                         // Standalone added lines (not following removed)
                         if current_line >= skip {
-                            let right_line = format_side_line(hunk_line, theme, false, max_width, horizontal_offset);
+                            let right_line = format_side_line(
+                                hunk_line,
+                                theme,
+                                false,
+                                max_width,
+                                horizontal_offset,
+                            );
                             left_lines.push(Line::from(""));
                             right_lines.push(right_line);
                         }
@@ -150,7 +188,11 @@ fn format_side_line<'a>(
     let full_content = format!("{}{}", prefix, hunk_line.content);
 
     // Apply horizontal scroll to content only
-    let scrolled_content = apply_horizontal_scroll(&full_content, horizontal_offset, max_width.saturating_sub(line_num.len()));
+    let scrolled_content = apply_horizontal_scroll(
+        &full_content,
+        horizontal_offset,
+        max_width.saturating_sub(line_num.len()),
+    );
 
     // Combine line number with scrolled content
     let display = format!("{}{}", line_num, scrolled_content);

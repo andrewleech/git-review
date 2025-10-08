@@ -31,7 +31,7 @@ pub struct App {
     pub help_visible: bool,
     pub scroll_offset: usize,
     pub horizontal_scroll: usize, // Horizontal scroll offset for side-by-side mode
-    pub cursor_line: usize, // Current line in diff view
+    pub cursor_line: usize,       // Current line in diff view
     pub terminal_width: u16,
     pub terminal_height: u16,
 
@@ -41,7 +41,6 @@ pub struct App {
 
     // Hunk expansion tracking (currently unused - git2 doesn't support per-hunk expansion)
     pub hunk_expansions: HashMap<HunkId, ExpansionState>,
-
     // TODO: Comment tracking (for future implementation)
     // pub comments: HashMap<CommentLocation, String>,
 }
@@ -169,7 +168,10 @@ impl App {
         } else {
             let new_offset = self.scroll_offset.saturating_add(amount as usize);
             self.scroll_offset = new_offset.min(max_scroll);
-            self.cursor_line = self.cursor_line.saturating_add(amount as usize).min(content_lines);
+            self.cursor_line = self
+                .cursor_line
+                .saturating_add(amount as usize)
+                .min(content_lines);
         }
     }
 

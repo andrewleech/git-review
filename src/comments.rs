@@ -49,12 +49,12 @@ impl ReviewSession {
     /// Save session to a timestamped file
     pub fn save(&self, repo_path: &std::path::Path) -> Result<PathBuf> {
         // Canonicalize repo path to prevent path traversal
-        let canonical_repo = repo_path.canonicalize()
+        let canonical_repo = repo_path
+            .canonicalize()
             .context("Failed to canonicalize repository path")?;
 
         let review_dir = canonical_repo.join(".git-review");
-        fs::create_dir_all(&review_dir)
-            .context("Failed to create .git-review directory")?;
+        fs::create_dir_all(&review_dir).context("Failed to create .git-review directory")?;
 
         // Generate filename with timestamp and process ID for uniqueness
         let filename = format!(
@@ -74,8 +74,10 @@ impl ReviewSession {
         // Format as human-readable text
         let content = self.to_text();
 
-        fs::write(&file_path, content)
-            .context(format!("Failed to write review file: {}", file_path.display()))?;
+        fs::write(&file_path, content).context(format!(
+            "Failed to write review file: {}",
+            file_path.display()
+        ))?;
 
         Ok(file_path)
     }
@@ -84,7 +86,10 @@ impl ReviewSession {
     pub fn to_text(&self) -> String {
         let mut output = String::new();
 
-        output.push_str(&format!("Review Date: {}\n", self.review_date.format("%Y-%m-%d %H:%M:%S")));
+        output.push_str(&format!(
+            "Review Date: {}\n",
+            self.review_date.format("%Y-%m-%d %H:%M:%S")
+        ));
         output.push_str(&format!("Commit: {}\n", self.commit_hash));
         output.push_str(&format!("Branch: {}\n", self.branch_name));
         output.push_str("\n---\n\n");
@@ -97,7 +102,10 @@ impl ReviewSession {
             };
 
             output.push_str(&format!("File: {}\n", comment.file_path));
-            output.push_str(&format!("Line: {} ({})\n", comment.line_number, line_type_str));
+            output.push_str(&format!(
+                "Line: {} ({})\n",
+                comment.line_number, line_type_str
+            ));
             output.push_str("Comment:\n");
             output.push_str(&comment.comment);
             output.push_str("\n\n---\n\n");
@@ -116,9 +124,7 @@ impl ReviewSession {
 
         let sessions = Vec::new();
 
-        for entry in fs::read_dir(&review_dir)
-            .context("Failed to read .git-review directory")?
-        {
+        for entry in fs::read_dir(&review_dir).context("Failed to read .git-review directory")? {
             let entry = entry?;
             let path = entry.path();
 

@@ -71,34 +71,31 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
             app.horizontal_scroll,
         );
 
-        let left_paragraph = Paragraph::new(left_lines)
-            .block(
-                Block::default()
-                    .title(format!(" Old: {} ", file.old_path))
-                    .borders(Borders::ALL)
-                    .border_style(theme.border_style()),
-            );
+        let left_paragraph = Paragraph::new(left_lines).block(
+            Block::default()
+                .title(format!(" Old: {} ", file.old_path))
+                .borders(Borders::ALL)
+                .border_style(theme.border_style()),
+        );
 
         // Render right side (added lines)
-        let right_paragraph = Paragraph::new(right_lines)
-            .block(
-                Block::default()
-                    .title(format!(" New: {} ", file.new_path))
-                    .borders(Borders::ALL)
-                    .border_style(theme.border_style()),
-            );
+        let right_paragraph = Paragraph::new(right_lines).block(
+            Block::default()
+                .title(format!(" New: {} ", file.new_path))
+                .borders(Borders::ALL)
+                .border_style(theme.border_style()),
+        );
 
         f.render_widget(left_paragraph, left_area);
         f.render_widget(right_paragraph, right_area);
     } else {
         // No file selected
-        let placeholder = Paragraph::new("No file selected")
-            .block(
-                Block::default()
-                    .title(" Diff (Side-by-Side) ")
-                    .borders(Borders::ALL)
-                    .border_style(theme.border_style()),
-            );
+        let placeholder = Paragraph::new("No file selected").block(
+            Block::default()
+                .title(" Diff (Side-by-Side) ")
+                .borders(Borders::ALL)
+                .border_style(theme.border_style()),
+        );
         f.render_widget(placeholder, area);
     }
 }
@@ -233,4 +230,3 @@ fn format_hunk_line<'a>(hunk_line: &HunkLine, theme: &Theme) -> Line<'a> {
 
     Line::from(vec![Span::styled(content, style)])
 }
-

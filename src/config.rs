@@ -130,12 +130,13 @@ impl Config {
 
         // Create config directory if it doesn't exist
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .context(format!("Failed to create config directory: {}", parent.display()))?;
+            fs::create_dir_all(parent).context(format!(
+                "Failed to create config directory: {}",
+                parent.display()
+            ))?;
         }
 
-        let contents = toml::to_string_pretty(self)
-            .context("Failed to serialize config")?;
+        let contents = toml::to_string_pretty(self).context("Failed to serialize config")?;
 
         fs::write(&path, contents)
             .context(format!("Failed to write config file: {}", path.display()))?;
@@ -165,6 +166,9 @@ mod tests {
         let deserialized: Config = toml::from_str(&toml_str).unwrap();
 
         assert_eq!(config.display.diff_mode, deserialized.display.diff_mode);
-        assert_eq!(config.display.context_lines, deserialized.display.context_lines);
+        assert_eq!(
+            config.display.context_lines,
+            deserialized.display.context_lines
+        );
     }
 }

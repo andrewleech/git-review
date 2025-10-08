@@ -41,7 +41,10 @@ impl Hunk {
     /// Calculate how many lines can be expanded above
     pub fn available_lines_above(&self) -> usize {
         // Can expand up to the start of the file
-        std::cmp::min(self.old_start.saturating_sub(1), self.new_start.saturating_sub(1))
+        std::cmp::min(
+            self.old_start.saturating_sub(1),
+            self.new_start.saturating_sub(1),
+        )
     }
 }
 
@@ -103,10 +106,7 @@ pub fn parse_diff(diff_text: &str) -> Result<Vec<FileDiff>> {
             }
 
             // Parse hunk header: @@ -old_start,old_lines +new_start,new_lines @@
-            let hunk_info = line
-                .trim_start_matches("@@")
-                .trim_end_matches("@@")
-                .trim();
+            let hunk_info = line.trim_start_matches("@@").trim_end_matches("@@").trim();
 
             if let Some((old_part, new_part)) = hunk_info.split_once(' ') {
                 let old_parts: Vec<&str> = old_part.trim_start_matches('-').split(',').collect();

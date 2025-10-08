@@ -57,17 +57,14 @@ pub fn generate_branch_diff<'a>(
     options: &DiffOptions,
 ) -> Result<Diff<'a>> {
     let head = repo.head().context("Failed to get HEAD")?;
-    let head_tree = head
-        .peel_to_tree()
-        .context("Failed to peel HEAD to tree")?;
+    let head_tree = head.peel_to_tree().context("Failed to peel HEAD to tree")?;
 
     let base_ref = repo
         .revparse_single(base_branch)
         .context(format!("Failed to find base branch: {}", base_branch))?;
-    let base_tree = base_ref.peel_to_tree().context(format!(
-        "Failed to peel {} to tree",
-        base_branch
-    ))?;
+    let base_tree = base_ref
+        .peel_to_tree()
+        .context(format!("Failed to peel {} to tree", base_branch))?;
 
     let mut diff_opts = Git2DiffOptions::new();
     diff_opts.context_lines(options.context_lines);

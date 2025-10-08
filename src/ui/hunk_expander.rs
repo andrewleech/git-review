@@ -18,10 +18,7 @@ pub fn create_expand_above_line<'a>(
     let lines_to_show = available.min(increment as usize);
     let text = format!("  ↑ Expand {} more lines ↑  ", lines_to_show);
 
-    Some(Line::from(vec![Span::styled(
-        text,
-        theme.context_style(),
-    )]))
+    Some(Line::from(vec![Span::styled(text, theme.context_style())]))
 }
 
 /// Create an expand button line for below a hunk
@@ -42,8 +39,5 @@ pub fn create_expand_below_line<'a>(
     let lines_to_show = increment as usize;
     let text = format!("  ↓ Expand {} more lines ↓  ", lines_to_show);
 
-    Some(Line::from(vec![Span::styled(
-        text,
-        theme.context_style(),
-    )]))
+    Some(Line::from(vec![Span::styled(text, theme.context_style())]))
 }

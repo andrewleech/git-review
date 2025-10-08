@@ -25,9 +25,9 @@ impl Theme {
             header_fg: Color::White,
             selected_bg: Color::Blue,
             selected_fg: Color::White,
-            added_bg: Color::Rgb(22, 77, 37),    // GitHub green
-            added_fg: Color::Rgb(167, 255, 164), // Light green text
-            removed_bg: Color::Rgb(136, 23, 27), // GitHub red
+            added_bg: Color::Rgb(22, 77, 37),      // GitHub green
+            added_fg: Color::Rgb(167, 255, 164),   // Light green text
+            removed_bg: Color::Rgb(136, 23, 27),   // GitHub red
             removed_fg: Color::Rgb(255, 153, 164), // Light red text
             context_fg: Color::Gray,
             border: Color::DarkGray,

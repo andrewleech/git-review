@@ -33,8 +33,7 @@ pub fn render(f: &mut Frame, app: &App) -> Result<()> {
     if let Some(content_area) = layout_info.content {
         if app.log_pane_visible {
             // Split content into log pane and diff view
-            if let (Some(log_area), Some(diff_area)) =
-                (layout_info.log_pane, layout_info.diff_area)
+            if let (Some(log_area), Some(diff_area)) = (layout_info.log_pane, layout_info.diff_area)
             {
                 log_pane::render(f, app, log_area);
                 diff_view::render(f, app, diff_area)?;

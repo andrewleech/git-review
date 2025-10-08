@@ -74,7 +74,10 @@ pub fn render(f: &mut Frame, area: Rect) {
             Span::raw("  - Reset context to default"),
         ]),
         Line::from(""),
-        Line::from(Span::styled("Side-by-Side Navigation", theme.header_style())),
+        Line::from(Span::styled(
+            "Side-by-Side Navigation",
+            theme.header_style(),
+        )),
         Line::from(vec![
             Span::styled("  h/l", theme.selected_style()),
             Span::raw(" or "),
@@ -87,7 +90,10 @@ pub fn render(f: &mut Frame, area: Rect) {
         Line::from("  Scroll wheel - Navigate diff vertically"),
         Line::from("  Click commit - Select commit"),
         Line::from(""),
-        Line::from(Span::styled("Press ? or ESC to close", theme.context_style())),
+        Line::from(Span::styled(
+            "Press ? or ESC to close",
+            theme.context_style(),
+        )),
     ];
 
     let help_paragraph = Paragraph::new(help_text)
