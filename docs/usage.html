@@ -302,7 +302,12 @@
 
 Options:
   -p, --path &lt;PATH&gt;     Path to git repository (defaults to current directory)
-  -b, --base &lt;BRANCH&gt;   Base branch to compare against
+  -b, --base &lt;BRANCH&gt;   Base branch to compare against (cannot be used with --range)
+  -r, --range &lt;RANGE&gt;   Git commit range to review (cannot be used with --base)
+                        Examples:
+                          HEAD~5..HEAD  - Review last 5 commits
+                          origin/main   - Compare current branch to origin/main
+                          v1.0..v2.0    - Review commits between tags
   -c, --context &lt;LINES&gt; Initial context lines for diffs [default: 8]
   -h, --help            Print help
   -V, --version         Print version</code></pre>
@@ -314,11 +319,30 @@ git-review
 # Review with custom base branch
 git-review --base origin/develop
 
+# Review last 5 commits
+git-review --range HEAD~5..HEAD
+
+# Review commits between branches
+git-review --range main..feature/new-ui
+
+# Review commits between tags
+git-review --range v1.0..v2.0
+
 # Start with more context lines
 git-review --context 12
 
 # Review a different repository
 git-review --path /path/to/repo</code></pre>
+
+            <h3>Specifying Commit Ranges</h3>
+            <p>Use <code>--range</code> to review specific commit ranges instead of comparing against a base branch:</p>
+            <ul>
+                <li><code>git-review --range HEAD~5..HEAD</code> - Review last 5 commits</li>
+                <li><code>git-review --range origin/main</code> - Compare current branch to origin/main (shorthand for HEAD..origin/main)</li>
+                <li><code>git-review --range v1.0..v2.0</code> - Review commits between version tags</li>
+                <li><code>git-review --range main..feature/new-ui</code> - Review commits between branches</li>
+            </ul>
+            <p><strong>Note:</strong> The <code>--range</code> and <code>--base</code> options cannot be used together.</p>
         </section>
 
         <section id="configuration">

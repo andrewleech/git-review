@@ -125,3 +125,56 @@ fn test_config_defaults() {
     assert_eq!(config.ui.log_pane_width_ratio, 0.35);
     assert!(config.ui.show_line_numbers);
 }
+
+#[test]
+fn test_range_argument_help() {
+    let mut cmd = Command::cargo_bin("git-review").expect("Failed to find binary");
+    cmd.arg("--help");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("--range"))
+        .stdout(predicate::str::contains("Git commit range to review"));
+}
+
+#[test]
+fn test_range_and_base_conflict() {
+    let temp_dir = create_test_repo();
+
+    let mut cmd = Command::cargo_bin("git-review").expect("Failed to find binary");
+    cmd.args(["--base", "main", "--range", "HEAD~1..HEAD"]);
+    cmd.current_dir(temp_dir.path());
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be used with"));
+}
+
+#[test]
+fn test_range_argument_invalid_ref() {
+    let temp_dir = create_test_repo();
+
+    let mut cmd = Command::cargo_bin("git-review").expect("Failed to find binary");
+    cmd.args(["--range", "nonexistent..HEAD"]);
+    cmd.current_dir(temp_dir.path());
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("Failed to find ref"));
+}
+
+#[test]
+fn test_parse_range_function() {
+    use git_review::git::parse_range;
+
+    // Test explicit range
+    let (start, end) = parse_range("HEAD~5..HEAD").expect("Failed to parse range");
+    assert_eq!(start, "HEAD~5");
+    assert_eq!(end, "HEAD");
+
+    // Test single target (defaults to HEAD as start)
+    let (start, end) = parse_range("origin/main").expect("Failed to parse range");
+    assert_eq!(start, "HEAD");
+    assert_eq!(end, "origin/main");
+
+    // Test invalid range
+    assert!(parse_range("..HEAD").is_err());
+    assert!(parse_range("HEAD..").is_err());
+}

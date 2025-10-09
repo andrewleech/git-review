@@ -51,7 +51,12 @@ git-review
 ```
 Options:
   -p, --path <PATH>     Path to git repository (defaults to current directory)
-  -b, --base <BRANCH>   Base branch to compare against
+  -b, --base <BRANCH>   Base branch to compare against (cannot be used with --range)
+  -r, --range <RANGE>   Git commit range to review (cannot be used with --base)
+                        Examples:
+                          HEAD~5..HEAD  - Review last 5 commits
+                          origin/main   - Compare current branch to origin/main
+                          v1.0..v2.0    - Review commits between tags
   -c, --context <LINES> Initial context lines for diffs [default: 8]
   -h, --help            Print help
   -V, --version         Print version
@@ -76,6 +81,27 @@ Options:
 
 - Scroll wheel - Navigate diff vertically
 - Click commit - Select commit in log pane
+
+### Review Specific Commit Ranges
+
+Use `--range` to review specific commit ranges instead of comparing against a base branch:
+
+```bash
+# Review last 5 commits
+git-review --range HEAD~5..HEAD
+
+# Review commits between two branches
+git-review --range main..feature/new-ui
+
+# Review commits after a specific tag (from tag to HEAD)
+git-review --range v1.0
+
+# Review commits between two tags
+git-review --range v1.0..v2.0
+
+# Review commits in another repository
+git-review --path /path/to/repo --range origin/main
+```
 
 ## Configuration
 
