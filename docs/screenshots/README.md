@@ -13,4 +13,4 @@ Screenshots generated via VHS (Visual Headless Shell) automation.
 
 Screenshots generated via VHS: `vhs test-screenshot.tape`
 
-Note: Automated VHS capture requires manual branch setup. For best results, create a feature branch with representative commits before running.
+Uses `--range HEAD~6..HEAD` to display the most recent 6 commits from the repository.

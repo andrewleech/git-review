@@ -18,20 +18,8 @@ Enter
 Type "clear"
 Enter
 
-# Create demo branch from origin/main, then cherry-pick last 6 commits
-Type "git checkout -b temp/screenshots origin/main 2>/dev/null || (git branch -D temp/screenshots && git checkout -b temp/screenshots origin/main)"
-Enter
-Sleep 500ms
-
-Type "git cherry-pick HEAD@{1}~5..HEAD@{1}"
-Enter
-Sleep 1s
-
-Type "clear"
-Enter
-
-# Run git-review (shows cherry-picked commits)
-Type "./target/release/git-review"
+# Run git-review with --range to show last 6 commits
+Type "./target/release/git-review --range HEAD~6..HEAD"
 Enter
 Sleep 2s
 
@@ -54,8 +42,3 @@ Type "?"
 Sleep 300ms
 Type "q"
 Sleep 500ms
-
-# Cleanup branch
-Type "git checkout main && git branch -D temp/screenshots"
-Enter
-Sleep 300ms
