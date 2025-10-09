@@ -5,16 +5,13 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+#[derive(Default)]
 pub enum DiffMode {
+    #[default]
     SideBySide,
     Inline,
 }
 
-impl Default for DiffMode {
-    fn default() -> Self {
-        DiffMode::SideBySide
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DisplayConfig {

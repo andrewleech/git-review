@@ -1,9 +1,7 @@
 mod app;
-mod comments;
 mod config;
 mod git;
 mod input;
-mod syntax;
 mod ui;
 
 use anyhow::{Context, Result};
@@ -72,14 +70,14 @@ fn main() -> Result<()> {
             println!("No commits found in specified range");
             println!("The refs point to the same commit or have no differences.");
         } else {
-            println!("No commits found between HEAD and {}", base_branch);
+            println!("No commits found between HEAD and {base_branch}");
             println!("Your branch is up to date with the base branch.");
         }
         return Ok(());
     }
 
     // Initialize app state
-    let mut app = app::App::new(repo, commits, base_branch, config);
+    let mut app = app::App::new(repo, commits, config);
 
     // Load initial diff
     app.init_diff();
@@ -126,7 +124,7 @@ fn app_loop(
         // Draw UI
         terminal.draw(|f| {
             if let Err(e) = ui::render(f, app) {
-                eprintln!("Render error: {}", e);
+                eprintln!("Render error: {e}");
             }
         })?;
 

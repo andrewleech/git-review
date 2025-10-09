@@ -18,6 +18,7 @@ pub struct HunkLine {
 #[derive(Debug, Clone)]
 pub struct Hunk {
     pub old_start: usize,
+    #[allow(dead_code)]
     pub old_lines: usize,
     pub new_start: usize,
     pub new_lines: usize,
@@ -26,11 +27,6 @@ pub struct Hunk {
 }
 
 impl Hunk {
-    /// Check if more context is available above this hunk
-    pub fn can_expand_above(&self) -> bool {
-        self.old_start > 1 || self.new_start > 1
-    }
-
     /// Check if more context is available below this hunk
     pub fn can_expand_below(&self, file_lines: usize) -> bool {
         // Check if this hunk reaches the end of the file
@@ -228,20 +224,5 @@ mod tests {
         assert_eq!(hunk.lines[1].line_type, LineType::Removed);
         assert_eq!(hunk.lines[2].line_type, LineType::Added);
         assert_eq!(hunk.lines[3].line_type, LineType::Context);
-    }
-
-    #[test]
-    fn test_hunk_expansion_available() {
-        let hunk = Hunk {
-            old_start: 10,
-            old_lines: 5,
-            new_start: 10,
-            new_lines: 5,
-            header: "@@ -10,5 +10,5 @@".to_string(),
-            lines: Vec::new(),
-        };
-
-        assert!(hunk.can_expand_above());
-        assert_eq!(hunk.available_lines_above(), 9);
     }
 }

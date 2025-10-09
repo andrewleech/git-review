@@ -1,27 +1,11 @@
 use crate::config::{Config, DiffMode};
 use crate::git::{CommitInfo, FileDiff};
 use git2::Repository;
-use std::collections::HashMap;
-
-/// Unique identifier for a hunk (file path + hunk index)
-#[derive(Debug, Clone, Hash, Eq, PartialEq)]
-pub struct HunkId {
-    pub file_path: String,
-    pub hunk_index: usize,
-}
-
-/// Expansion state for a specific hunk
-#[derive(Debug, Clone, Default)]
-pub struct ExpansionState {
-    pub lines_above: usize,
-    pub lines_below: usize,
-}
 
 /// Application state
 pub struct App {
     pub repo: Repository,
     pub commits: Vec<CommitInfo>,
-    pub base_branch: String,
     pub config: Config,
 
     // UI state
@@ -38,18 +22,12 @@ pub struct App {
     // Current diff data
     pub current_files: Vec<FileDiff>,
     pub current_context_lines: u32, // Context lines for current diff
-
-    // Hunk expansion tracking (currently unused - git2 doesn't support per-hunk expansion)
-    pub hunk_expansions: HashMap<HunkId, ExpansionState>,
-    // TODO: Comment tracking (for future implementation)
-    // pub comments: HashMap<CommentLocation, String>,
 }
 
 impl App {
     pub fn new(
         repo: Repository,
         commits: Vec<CommitInfo>,
-        base_branch: String,
         config: Config,
     ) -> Self {
         // Get initial terminal size
@@ -60,7 +38,6 @@ impl App {
         Self {
             repo,
             commits,
-            base_branch,
             config,
             selected_commit_index: 0,
             selected_file_index: 0,
@@ -73,7 +50,6 @@ impl App {
             terminal_height: height,
             current_files: Vec::new(),
             current_context_lines: initial_context,
-            hunk_expansions: HashMap::new(),
         }
     }
 
@@ -152,7 +128,7 @@ impl App {
         self.reset_horizontal_scroll();
         // Save config - log error but don't fail
         if let Err(e) = self.config.save() {
-            eprintln!("Warning: Failed to save config: {}", e);
+            eprintln!("Warning: Failed to save config: {e}");
         }
     }
 
@@ -247,16 +223,6 @@ impl App {
         self.scroll_offset = 0;
     }
 
-    /// Expand context for a specific hunk (legacy - git2 expands entire diff)
-    pub fn expand_hunk_above(&mut self, _hunk_id: HunkId) {
-        self.expand_context();
-    }
-
-    /// Expand context below a specific hunk (legacy - git2 expands entire diff)
-    pub fn expand_hunk_below(&mut self, _hunk_id: HunkId) {
-        self.expand_context();
-    }
-
     /// Load diff for currently selected commit
     fn load_diff_for_current_commit(&mut self) {
         if let Some(commit) = self.selected_commit() {
@@ -273,24 +239,21 @@ impl App {
                             self.selected_file_index = 0;
                         }
                         Err(e) => {
-                            eprintln!("Failed to parse diff: {}", e);
+                            eprintln!("Failed to parse diff: {e}");
                             self.current_files = Vec::new();
                         }
                     },
                     Err(e) => {
-                        eprintln!("Failed to convert diff to text: {}", e);
+                        eprintln!("Failed to convert diff to text: {e}");
                         self.current_files = Vec::new();
                     }
                 },
                 Err(e) => {
-                    eprintln!("Failed to generate diff: {}", e);
+                    eprintln!("Failed to generate diff: {e}");
                     self.current_files = Vec::new();
                 }
             }
         }
-
-        // Clear expansion state for new commit
-        self.hunk_expansions.clear();
     }
 
     /// Initialize diff for first commit

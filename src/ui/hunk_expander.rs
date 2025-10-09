@@ -1,4 +1,3 @@
-use crate::app::HunkId;
 use crate::git::Hunk;
 use crate::ui::theme::Theme;
 use ratatui::text::{Line, Span};
@@ -7,7 +6,6 @@ use ratatui::text::{Line, Span};
 pub fn create_expand_above_line<'a>(
     hunk: &Hunk,
     theme: &Theme,
-    _hunk_id: &HunkId,
     increment: u32,
 ) -> Option<Line<'a>> {
     let available = hunk.available_lines_above();
@@ -16,7 +14,7 @@ pub fn create_expand_above_line<'a>(
     }
 
     let lines_to_show = available.min(increment as usize);
-    let text = format!("  ↑ Expand {} more lines ↑  ", lines_to_show);
+    let text = format!("  ↑ Expand {lines_to_show} more lines ↑  ");
 
     Some(Line::from(vec![Span::styled(text, theme.context_style())]))
 }
@@ -25,7 +23,6 @@ pub fn create_expand_above_line<'a>(
 pub fn create_expand_below_line<'a>(
     hunk: &Hunk,
     theme: &Theme,
-    _hunk_id: &HunkId,
     increment: u32,
     file_lines: Option<usize>,
 ) -> Option<Line<'a>> {
@@ -37,7 +34,7 @@ pub fn create_expand_below_line<'a>(
     }
 
     let lines_to_show = increment as usize;
-    let text = format!("  ↓ Expand {} more lines ↓  ", lines_to_show);
+    let text = format!("  ↓ Expand {lines_to_show} more lines ↓  ");
 
     Some(Line::from(vec![Span::styled(text, theme.context_style())]))
 }

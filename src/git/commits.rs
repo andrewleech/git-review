@@ -1,44 +1,17 @@
 use anyhow::{Context, Result};
-use git2::{Oid, Repository, Time};
+use git2::{Oid, Repository};
 
 #[derive(Debug, Clone)]
 pub struct CommitInfo {
     pub id: Oid,
     pub short_id: String,
     pub message: String,
-    pub author_name: String,
-    pub time: Time,
 }
 
 impl CommitInfo {
     /// Get the first line of the commit message
     pub fn summary(&self) -> &str {
         self.message.lines().next().unwrap_or("")
-    }
-
-    /// Format time as relative (e.g., "2 hours ago")
-    pub fn relative_time(&self) -> String {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as i64;
-
-        let commit_time = self.time.seconds();
-        let diff = now - commit_time;
-
-        if diff < 60 {
-            "just now".to_string()
-        } else if diff < 3600 {
-            format!("{} minutes ago", diff / 60)
-        } else if diff < 86400 {
-            format!("{} hours ago", diff / 3600)
-        } else if diff < 2592000 {
-            format!("{} days ago", diff / 86400)
-        } else if diff < 31536000 {
-            format!("{} months ago", diff / 2592000)
-        } else {
-            format!("{} years ago", diff / 31536000)
-        }
     }
 }
 
@@ -80,12 +53,12 @@ pub fn get_commit_log_range(
 ) -> Result<Vec<CommitInfo>> {
     let start_obj = repo
         .revparse_single(start_ref)
-        .with_context(|| format!("Failed to find start ref '{}' in range", start_ref))?;
+        .with_context(|| format!("Failed to find start ref '{start_ref}' in range"))?;
     let start_oid = start_obj.id();
 
     let end_obj = repo
         .revparse_single(end_ref)
-        .with_context(|| format!("Failed to find end ref '{}' in range", end_ref))?;
+        .with_context(|| format!("Failed to find end ref '{end_ref}' in range"))?;
     let end_oid = end_obj.id();
 
     // If start and end are the same, return empty vec
@@ -106,14 +79,12 @@ pub fn get_commit_log_range(
 
         let commit_info = CommitInfo {
             id: oid,
-            short_id: format!("{:.7}", oid),
+            short_id: format!("{oid:.7}"),
             message: commit
                 .message()
                 .unwrap_or("<no message>")
                 .trim()
                 .to_string(),
-            author_name: commit.author().name().unwrap_or("<unknown>").to_string(),
-            time: commit.time(),
         };
 
         commits.push(commit_info);
@@ -139,8 +110,6 @@ mod tests {
             id: Oid::zero(),
             short_id: "abc123".to_string(),
             message: "First line\nSecond line\nThird line".to_string(),
-            author_name: "Test Author".to_string(),
-            time: Time::new(0, 0),
         };
 
         assert_eq!(commit.summary(), "First line");
@@ -152,8 +121,6 @@ mod tests {
             id: Oid::zero(),
             short_id: "abc123".to_string(),
             message: "Single line message".to_string(),
-            author_name: "Test Author".to_string(),
-            time: Time::new(0, 0),
         };
 
         assert_eq!(commit.summary(), "Single line message");

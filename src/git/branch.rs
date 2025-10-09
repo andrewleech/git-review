@@ -21,9 +21,9 @@ pub fn detect_base_branch(repo: &Repository) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use git2::Repository;
-    use std::path::Path;
+    
+    
+    
 
     #[test]
     fn test_detect_base_branch_finds_main() {

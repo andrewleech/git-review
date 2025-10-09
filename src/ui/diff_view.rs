@@ -155,17 +155,11 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
         lines.push(Line::from(""));
 
         // Show hunks with expand buttons
-        for (hunk_idx, hunk) in file.hunks.iter().enumerate() {
-            let hunk_id = crate::app::HunkId {
-                file_path: file.new_path.clone(),
-                hunk_index: hunk_idx,
-            };
-
+        for hunk in &file.hunks {
             // Expand button above (if more context available)
             if let Some(expand_line) = crate::ui::hunk_expander::create_expand_above_line(
                 hunk,
                 theme,
-                &hunk_id,
                 app.config.display.context_expand_increment,
             ) {
                 lines.push(expand_line);
@@ -187,7 +181,6 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
             if let Some(expand_line) = crate::ui::hunk_expander::create_expand_below_line(
                 hunk,
                 theme,
-                &hunk_id,
                 app.config.display.context_expand_increment,
                 file.new_file_lines,
             ) {
@@ -213,16 +206,16 @@ fn format_hunk_line<'a>(hunk_line: &HunkLine, theme: &Theme) -> Line<'a> {
     let line_num = match hunk_line.line_type {
         LineType::Added => hunk_line
             .new_line_num
-            .map(|n| format!("{:4} ", n))
+            .map(|n| format!("{n:4} "))
             .unwrap_or_else(|| "     ".to_string()),
         LineType::Removed => hunk_line
             .old_line_num
-            .map(|n| format!("{:4} ", n))
+            .map(|n| format!("{n:4} "))
             .unwrap_or_else(|| "     ".to_string()),
         LineType::Context => hunk_line
             .old_line_num
             .or(hunk_line.new_line_num)
-            .map(|n| format!("{:4} ", n))
+            .map(|n| format!("{n:4} "))
             .unwrap_or_else(|| "     ".to_string()),
     };
 

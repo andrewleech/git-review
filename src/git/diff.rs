@@ -50,33 +50,6 @@ pub fn generate_diff<'a>(
     Ok(diff)
 }
 
-/// Get diff for comparing branch HEAD against base branch
-pub fn generate_branch_diff<'a>(
-    repo: &'a Repository,
-    base_branch: &str,
-    options: &DiffOptions,
-) -> Result<Diff<'a>> {
-    let head = repo.head().context("Failed to get HEAD")?;
-    let head_tree = head.peel_to_tree().context("Failed to peel HEAD to tree")?;
-
-    let base_ref = repo
-        .revparse_single(base_branch)
-        .context(format!("Failed to find base branch: {}", base_branch))?;
-    let base_tree = base_ref
-        .peel_to_tree()
-        .context(format!("Failed to peel {} to tree", base_branch))?;
-
-    let mut diff_opts = Git2DiffOptions::new();
-    diff_opts.context_lines(options.context_lines);
-    diff_opts.ignore_whitespace(false);
-
-    let diff = repo
-        .diff_tree_to_tree(Some(&base_tree), Some(&head_tree), Some(&mut diff_opts))
-        .context("Failed to generate branch diff")?;
-
-    Ok(diff)
-}
-
 /// Convert git2 Diff to text (patch format)
 pub fn diff_to_text(diff: &Diff) -> Result<String> {
     let mut patch_text = String::new();

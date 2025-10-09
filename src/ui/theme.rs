@@ -16,8 +16,8 @@ pub struct Theme {
     pub border: Color,
 }
 
-impl Theme {
-    pub fn default() -> Self {
+impl Default for Theme {
+    fn default() -> Self {
         Self {
             bg: Color::Reset,
             fg: Color::White,
@@ -33,6 +33,9 @@ impl Theme {
             border: Color::DarkGray,
         }
     }
+}
+
+impl Theme {
 
     pub fn header_style(&self) -> Style {
         Style::default()

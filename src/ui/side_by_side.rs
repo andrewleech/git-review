@@ -186,12 +186,12 @@ fn format_side_line<'a>(
     let line_num = if is_left {
         hunk_line
             .old_line_num
-            .map(|n| format!("{:4} ", n))
+            .map(|n| format!("{n:4} "))
             .unwrap_or_else(|| "     ".to_string())
     } else {
         hunk_line
             .new_line_num
-            .map(|n| format!("{:4} ", n))
+            .map(|n| format!("{n:4} "))
             .unwrap_or_else(|| "     ".to_string())
     };
 
@@ -206,7 +206,7 @@ fn format_side_line<'a>(
     );
 
     // Combine line number with scrolled content
-    let mut display = format!("{}{}", line_num, scrolled_content);
+    let mut display = format!("{line_num}{scrolled_content}");
 
     // Ensure the display string fits exactly within max_width by truncating or padding
     let display_len = display.chars().count();
