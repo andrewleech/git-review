@@ -2,6 +2,8 @@
 
 Terminal-based code review tool for git branches with GitHub-inspired diff UI.
 
+![Side-by-side diff view](docs/screenshots/side-by-side.png)
+
 ## Features
 
 ### Implemented
