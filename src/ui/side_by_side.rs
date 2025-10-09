@@ -25,7 +25,16 @@ pub fn create_side_by_side_lines<'a>(
         for hunk in &file.hunks {
             // Hunk header on both sides (scrolled and truncated if needed)
             if current_line >= skip && current_line < end_line {
-                let header = apply_horizontal_scroll(&hunk.header, horizontal_offset, max_width);
+                let mut header = apply_horizontal_scroll(&hunk.header, horizontal_offset, max_width);
+
+                // Ensure header fits exactly within max_width
+                let header_len = header.chars().count();
+                if header_len > max_width {
+                    header = header.chars().take(max_width).collect();
+                } else if header_len < max_width {
+                    header.push_str(&" ".repeat(max_width - header_len));
+                }
+
                 left_lines.push(Line::from(vec![Span::styled(
                     header.clone(),
                     theme.context_style(),
@@ -104,7 +113,7 @@ pub fn create_side_by_side_lines<'a>(
                                             horizontal_offset,
                                         )
                                     })
-                                    .unwrap_or_else(|| Line::from(""));
+                                    .unwrap_or_else(|| Line::from(" ".repeat(max_width)));
                                 let right = added_lines
                                     .get(j)
                                     .map(|line| {
@@ -116,7 +125,7 @@ pub fn create_side_by_side_lines<'a>(
                                             horizontal_offset,
                                         )
                                     })
-                                    .unwrap_or_else(|| Line::from(""));
+                                    .unwrap_or_else(|| Line::from(" ".repeat(max_width)));
 
                                 left_lines.push(left);
                                 right_lines.push(right);
@@ -134,7 +143,8 @@ pub fn create_side_by_side_lines<'a>(
                                 max_width,
                                 horizontal_offset,
                             );
-                            left_lines.push(Line::from(""));
+                            // Pad empty left side to prevent artifacts
+                            left_lines.push(Line::from(" ".repeat(max_width)));
                             right_lines.push(right_line);
                         }
                         current_line += 1;
@@ -143,10 +153,11 @@ pub fn create_side_by_side_lines<'a>(
                 }
             }
 
-            // Empty line between hunks
+            // Empty line between hunks (padded to prevent artifacts)
             if current_line >= skip && current_line < end_line {
-                left_lines.push(Line::from(""));
-                right_lines.push(Line::from(""));
+                let empty = " ".repeat(max_width);
+                left_lines.push(Line::from(empty.clone()));
+                right_lines.push(Line::from(empty));
             }
             current_line += 1;
             if current_line >= end_line {
@@ -195,7 +206,17 @@ fn format_side_line<'a>(
     );
 
     // Combine line number with scrolled content
-    let display = format!("{}{}", line_num, scrolled_content);
+    let mut display = format!("{}{}", line_num, scrolled_content);
+
+    // Ensure the display string fits exactly within max_width by truncating or padding
+    let display_len = display.chars().count();
+    if display_len > max_width {
+        // Truncate to max_width
+        display = display.chars().take(max_width).collect();
+    } else if display_len < max_width {
+        // Pad with spaces to max_width to prevent artifacts
+        display.push_str(&" ".repeat(max_width - display_len));
+    }
 
     Line::from(vec![Span::styled(display, style)])
 }
