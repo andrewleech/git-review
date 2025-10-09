@@ -46,6 +46,7 @@ fn main() -> Result<()> {
         .context("Failed to find git repository. Make sure you're in a git directory.")?;
 
     // Get commits and base branch based on --range or --base
+    let using_range = args.range.is_some();
     let (commits, base_branch) = if let Some(range) = args.range {
         // Use explicit range
         let (start_ref, end_ref) = git::parse_range(&range)?;
@@ -67,8 +68,13 @@ fn main() -> Result<()> {
     config.display.context_lines = args.context;
 
     if commits.is_empty() {
-        println!("No commits found in specified range");
-        println!("Your branch is up to date with the base branch.");
+        if using_range {
+            println!("No commits found in specified range");
+            println!("The refs point to the same commit or have no differences.");
+        } else {
+            println!("No commits found between HEAD and {}", base_branch);
+            println!("Your branch is up to date with the base branch.");
+        }
         return Ok(());
     }
 

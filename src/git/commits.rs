@@ -45,9 +45,16 @@ impl CommitInfo {
 /// Parse a git range string into start and end refs
 ///
 /// Supports two formats:
-/// - "ref" -> (HEAD, ref)
-/// - "start..end" -> (start, end)
+/// - "ref" -> (ref, HEAD) - commits in HEAD not in ref
+/// - "start..end" -> (start, end) - commits in end not in start
 pub fn parse_range(range: &str) -> Result<(String, String)> {
+    // Check for three-dot syntax which is not supported
+    if range.contains("...") {
+        anyhow::bail!(
+            "Three-dot range syntax (A...B) is not supported. Use two-dot syntax (A..B) to show commits in B but not in A."
+        );
+    }
+
     if range.contains("..") {
         let parts: Vec<&str> = range.split("..").collect();
         if parts.len() != 2 {
@@ -58,7 +65,8 @@ pub fn parse_range(range: &str) -> Result<(String, String)> {
         }
         Ok((parts[0].to_string(), parts[1].to_string()))
     } else {
-        Ok(("HEAD".to_string(), range.to_string()))
+        // Single ref: show commits in HEAD not in the specified ref
+        Ok((range.to_string(), "HEAD".to_string()))
     }
 }
 
@@ -72,12 +80,12 @@ pub fn get_commit_log_range(
 ) -> Result<Vec<CommitInfo>> {
     let start_obj = repo
         .revparse_single(start_ref)
-        .context(format!("Failed to find ref: {}", start_ref))?;
+        .with_context(|| format!("Failed to find start ref '{}' in range", start_ref))?;
     let start_oid = start_obj.id();
 
     let end_obj = repo
         .revparse_single(end_ref)
-        .context(format!("Failed to find ref: {}", end_ref))?;
+        .with_context(|| format!("Failed to find end ref '{}' in range", end_ref))?;
     let end_oid = end_obj.id();
 
     // If start and end are the same, return empty vec
@@ -161,8 +169,18 @@ mod tests {
     #[test]
     fn test_parse_range_single_target() {
         let result = parse_range("origin/main").unwrap();
-        assert_eq!(result.0, "HEAD");
-        assert_eq!(result.1, "origin/main");
+        assert_eq!(result.0, "origin/main");
+        assert_eq!(result.1, "HEAD");
+    }
+
+    #[test]
+    fn test_parse_range_three_dot_syntax_error() {
+        let result = parse_range("main...feature");
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Three-dot range syntax"));
     }
 
     #[test]

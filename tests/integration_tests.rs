@@ -157,7 +157,7 @@ fn test_range_argument_invalid_ref() {
     cmd.current_dir(temp_dir.path());
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("Failed to find ref"));
+        .stderr(predicate::str::contains("Failed to find start ref"));
 }
 
 #[test]
@@ -169,10 +169,10 @@ fn test_parse_range_function() {
     assert_eq!(start, "HEAD~5");
     assert_eq!(end, "HEAD");
 
-    // Test single target (defaults to HEAD as start)
+    // Test single target (shows commits in HEAD not in origin/main)
     let (start, end) = parse_range("origin/main").expect("Failed to parse range");
-    assert_eq!(start, "HEAD");
-    assert_eq!(end, "origin/main");
+    assert_eq!(start, "origin/main");
+    assert_eq!(end, "HEAD");
 
     // Test invalid range
     assert!(parse_range("..HEAD").is_err());
