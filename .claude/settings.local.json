@@ -8,7 +8,8 @@
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "/home/corona/git-ignore/"
+      "/home/corona/git-ignore/",
+      "/home/corona/openmv_vfs"
     ]
   }
 }

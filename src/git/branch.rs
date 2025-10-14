@@ -3,18 +3,41 @@ use git2::Repository;
 
 /// Detect the base branch for comparison
 ///
-/// Tries in order: origin/main, origin/master, main, master
+/// Strategy:
+/// 1. Try to find the upstream tracking branch of main/master
+/// 2. Fall back to local main/master
+/// 3. Fall back to origin/main or origin/master
 pub fn detect_base_branch(repo: &Repository) -> Result<String> {
-    let candidates = vec!["origin/main", "origin/master", "main", "master"];
+    // First, try to find main or master branches and check their upstream
+    for local_branch in ["main", "master"] {
+        if let Ok(branch) = repo.find_branch(local_branch, git2::BranchType::Local) {
+            // Check if this branch has an upstream tracking branch
+            if let Ok(upstream) = branch.upstream() {
+                if let Some(upstream_name) = upstream.name()? {
+                    // Verify the upstream ref exists and return it
+                    if repo.revparse_single(upstream_name).is_ok() {
+                        return Ok(upstream_name.to_string());
+                    }
+                }
+            }
 
-    for branch_name in candidates {
+            // If no upstream or upstream doesn't exist, use the local branch
+            if repo.revparse_single(local_branch).is_ok() {
+                return Ok(local_branch.to_string());
+            }
+        }
+    }
+
+    // Fall back to remote branches if no local main/master exists
+    let remote_candidates = vec!["origin/main", "origin/master"];
+    for branch_name in remote_candidates {
         if repo.revparse_single(branch_name).is_ok() {
             return Ok(branch_name.to_string());
         }
     }
 
     anyhow::bail!(
-        "Could not find base branch. Tried: origin/main, origin/master, main, master.\n\
+        "Could not find base branch. Tried: main, master (with upstream tracking), origin/main, origin/master.\n\
          Make sure you have a main or master branch."
     )
 }
