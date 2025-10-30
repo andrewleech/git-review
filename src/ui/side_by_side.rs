@@ -25,7 +25,8 @@ pub fn create_side_by_side_lines<'a>(
         for hunk in &file.hunks {
             // Hunk header on both sides (scrolled and truncated if needed)
             if current_line >= skip && current_line < end_line {
-                let mut header = apply_horizontal_scroll(&hunk.header, horizontal_offset, max_width);
+                let mut header =
+                    apply_horizontal_scroll(&hunk.header, horizontal_offset, max_width);
 
                 // Ensure header fits exactly within max_width
                 let header_len = header.chars().count();

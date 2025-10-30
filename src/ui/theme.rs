@@ -36,7 +36,6 @@ impl Default for Theme {
 }
 
 impl Theme {
-
     pub fn header_style(&self) -> Style {
         Style::default()
             .bg(self.header_bg)

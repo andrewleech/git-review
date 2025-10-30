@@ -44,9 +44,6 @@ pub fn detect_base_branch(repo: &Repository) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    
-    
-    
 
     #[test]
     fn test_detect_base_branch_finds_main() {

@@ -25,11 +25,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(
-        repo: Repository,
-        commits: Vec<CommitInfo>,
-        config: Config,
-    ) -> Self {
+    pub fn new(repo: Repository, commits: Vec<CommitInfo>, config: Config) -> Self {
         // Get initial terminal size
         let (width, height) = crossterm::terminal::size().unwrap_or((80, 24));
 

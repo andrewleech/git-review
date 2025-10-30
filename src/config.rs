@@ -12,7 +12,6 @@ pub enum DiffMode {
     Inline,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DisplayConfig {
     #[serde(default)]
