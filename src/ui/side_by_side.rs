@@ -30,10 +30,14 @@ pub fn create_side_by_side_lines<'a>(
 
                 // Ensure header fits exactly within max_width
                 let header_len = header.chars().count();
-                if header_len > max_width {
-                    header = header.chars().take(max_width).collect();
-                } else if header_len < max_width {
-                    header.push_str(&" ".repeat(max_width - header_len));
+                match header_len.cmp(&max_width) {
+                    std::cmp::Ordering::Greater => {
+                        header = header.chars().take(max_width).collect();
+                    }
+                    std::cmp::Ordering::Less => {
+                        header.push_str(&" ".repeat(max_width - header_len));
+                    }
+                    std::cmp::Ordering::Equal => {}
                 }
 
                 left_lines.push(Line::from(vec![Span::styled(
@@ -211,12 +215,16 @@ fn format_side_line<'a>(
 
     // Ensure the display string fits exactly within max_width by truncating or padding
     let display_len = display.chars().count();
-    if display_len > max_width {
-        // Truncate to max_width
-        display = display.chars().take(max_width).collect();
-    } else if display_len < max_width {
-        // Pad with spaces to max_width to prevent artifacts
-        display.push_str(&" ".repeat(max_width - display_len));
+    match display_len.cmp(&max_width) {
+        std::cmp::Ordering::Greater => {
+            // Truncate to max_width
+            display = display.chars().take(max_width).collect();
+        }
+        std::cmp::Ordering::Less => {
+            // Pad with spaces to max_width to prevent artifacts
+            display.push_str(&" ".repeat(max_width - display_len));
+        }
+        std::cmp::Ordering::Equal => {}
     }
 
     Line::from(vec![Span::styled(display, style)])
