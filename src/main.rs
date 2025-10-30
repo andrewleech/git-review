@@ -1,13 +1,22 @@
 mod app;
+mod comments;
 mod config;
+mod export;
 mod git;
 mod input;
 mod ui;
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use git2::Repository;
+use std::io::{self, Write};
 use std::path::PathBuf;
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum ExportFormatArg {
+    Markdown,
+    Json,
+}
 
 #[derive(Parser, Debug)]
 #[command(name = "git-review")]
@@ -33,6 +42,18 @@ struct Args {
     /// Initial context lines for diffs
     #[arg(short, long, value_name = "LINES", default_value = "8")]
     context: u32,
+
+    /// Export all comments for current branch to stdout
+    #[arg(long, conflicts_with = "clear_comments")]
+    export_comments: bool,
+
+    /// Export format (markdown or json)
+    #[arg(long, value_enum, default_value = "markdown", requires = "export_comments")]
+    format: ExportFormatArg,
+
+    /// Clear all comments for current branch
+    #[arg(long, conflicts_with = "export_comments")]
+    clear_comments: bool,
 }
 
 fn main() -> Result<()> {
@@ -42,6 +63,44 @@ fn main() -> Result<()> {
     let repo_path = args.path.unwrap_or_else(|| PathBuf::from("."));
     let repo = Repository::discover(&repo_path)
         .context("Failed to find git repository. Make sure you're in a git directory.")?;
+
+    // Handle export comments command
+    if args.export_comments {
+        let branch = get_current_branch(&repo)?;
+        let comments = git::notes::read_all_for_branch(&repo, &branch)?;
+
+        if comments.is_empty() {
+            eprintln!("No comments found for branch '{}'", branch);
+            return Ok(());
+        }
+
+        let output = match args.format {
+            ExportFormatArg::Markdown => export::to_markdown(&comments, &branch)?,
+            ExportFormatArg::Json => export::to_json(&comments)?,
+        };
+
+        println!("{}", output);
+        return Ok(());
+    }
+
+    // Handle clear comments command
+    if args.clear_comments {
+        let branch = get_current_branch(&repo)?;
+
+        print!("Delete all comments for branch '{}'? [y/N]: ", branch);
+        io::stdout().flush()?;
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+
+        if input.trim().to_lowercase() == "y" {
+            let deleted = git::notes::clear_branch_notes(&repo, &branch)?;
+            println!("✓ Cleared {} comment(s) for branch '{}'", deleted, branch);
+        } else {
+            println!("Cancelled");
+        }
+        return Ok(());
+    }
 
     // Get commits and base branch based on --range or --base
     let using_range = args.range.is_some();
@@ -148,4 +207,19 @@ fn app_loop(
     }
 
     Ok(())
+}
+
+/// Get the current branch name
+fn get_current_branch(repo: &Repository) -> Result<String> {
+    let head = repo.head().context("Failed to get HEAD reference")?;
+
+    if let Some(branch_name) = head.shorthand() {
+        // Remove "refs/heads/" prefix if present
+        let name = branch_name.strip_prefix("refs/heads/").unwrap_or(branch_name);
+        Ok(name.to_string())
+    } else {
+        // Detached HEAD state - use commit SHA
+        let oid = head.target().context("HEAD has no target")?;
+        Ok(format!("detached-{}", &oid.to_string()[..7]))
+    }
 }

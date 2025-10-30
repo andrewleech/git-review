@@ -2,6 +2,7 @@ pub mod branch;
 pub mod commits;
 pub mod diff;
 pub mod diff_parser;
+pub mod notes;
 
 pub use branch::detect_base_branch;
 pub use commits::{get_commit_log, get_commit_log_range, parse_range, CommitInfo};
