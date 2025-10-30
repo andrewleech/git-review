@@ -14,7 +14,7 @@ permissions:
 
 env:
   # Minimum Rust version we support
-  MIN_RUST_VERSION: "1.74.0"
+  MIN_RUST_VERSION: "1.82.0"
 
 jobs:
   test:
@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust-version: ["stable", "beta", "1.74.0"]
+        rust-version: ["stable", "beta", "1.82.0"]
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:

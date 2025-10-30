@@ -11,7 +11,7 @@ documentation = "https://github.com/andrewleech/git-review"
 readme = "README.md"
 keywords = ["git", "code-review", "diff", "cli", "tui"]
 categories = ["command-line-utilities", "development-tools"]
-rust-version = "1.74"
+rust-version = "1.82"
 
 [[bin]]
 name = "git-review"
