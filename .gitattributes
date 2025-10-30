@@ -1,0 +1,15 @@
+# Enforce Unix line endings for all text files
+* text=auto eol=lf
+
+# Explicitly declare files as text
+*.rs text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+
+# Denote binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
