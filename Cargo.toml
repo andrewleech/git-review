@@ -1,6 +1,6 @@
 [package]
 name = "git-review"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 description = "Terminal-based code review tool for git branches with GitHub-inspired diff UI"
 license = "MIT"
