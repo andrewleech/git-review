@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::app::{App, CommentMode};
 use crate::config::DiffMode;
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
@@ -7,6 +7,19 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 ///
 /// Returns true if the app should exit
 pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
+    // Handle comment dialog input first
+    if matches!(app.comment_mode, CommentMode::Creating { .. }) {
+        return crate::ui::comment_dialog::handle_key(key, app);
+    }
+
+    // When viewing comments, only allow ESC to close
+    if matches!(app.comment_mode, CommentMode::ViewingComments(_)) {
+        if matches!(key.code, KeyCode::Esc) {
+            app.close_dialog();
+        }
+        return Ok(false);
+    }
+
     // When help is visible, only allow help toggle and ESC
     if app.help_visible {
         match (key.code, key.modifiers) {
@@ -79,6 +92,14 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             app.next_file();
         }
 
+        // Page scrolling within file
+        (KeyCode::PageUp, KeyModifiers::CONTROL) => {
+            app.scroll_page(-1);
+        }
+        (KeyCode::PageDown, KeyModifiers::CONTROL) => {
+            app.scroll_page(1);
+        }
+
         // Context expansion (expands entire diff since git2 doesn't support per-hunk)
         (KeyCode::Char('e'), KeyModifiers::NONE) | (KeyCode::Char('E'), KeyModifiers::SHIFT) => {
             app.expand_context();
@@ -88,15 +109,18 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             app.reset_context();
         }
 
-        // Comments (placeholder for future implementation)
+        // Comments
         (KeyCode::Char('c'), KeyModifiers::NONE) => {
-            // TODO: Add/edit comment on current line
+            app.start_comment_creation();
         }
         (KeyCode::Char('v'), KeyModifiers::NONE) => {
-            // TODO: View comments on current line
+            app.view_comments_at_current_location();
         }
         (KeyCode::Char('d'), KeyModifiers::NONE) => {
-            // TODO: Delete comment
+            // Delete first comment for current file (simple implementation)
+            if let Err(e) = app.delete_comment_at_index(0) {
+                app.status_message = Some(format!("Failed to delete comment: {e}"));
+            }
         }
 
         // Help - handle both ? directly and Shift+/
