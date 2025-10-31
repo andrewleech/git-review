@@ -6,6 +6,7 @@ use crate::comments::{Comment, CommentLevel, CommitComments};
 
 /// Format for exporting comments
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // Used in Phase 2 (TUI integration)
 pub enum ExportFormat {
     Markdown,
     Json,
@@ -51,21 +52,32 @@ pub fn to_markdown(comments_list: &[CommitComments], branch: &str) -> Result<Str
     let mut output = String::new();
 
     // Header
-    output.push_str(&format!("# Code Review: {}\n\n", branch));
-    output.push_str(&format!("Exported: {}\n\n", Local::now().format("%Y-%m-%d %H:%M:%S")));
+    output.push_str(&format!("# Code Review: {branch}\n\n"));
+    output.push_str(&format!(
+        "Exported: {}\n\n",
+        Local::now().format("%Y-%m-%d %H:%M:%S")
+    ));
 
     if comments_list.is_empty() {
         output.push_str("No comments found.\n");
         return Ok(output);
     }
 
-    output.push_str(&format!("Total commits with comments: {}\n\n", comments_list.len()));
+    output.push_str(&format!(
+        "Total commits with comments: {}\n\n",
+        comments_list.len()
+    ));
     output.push_str("---\n\n");
 
     // Group by commit
     for commit_comments in comments_list {
-        // Commit header
-        output.push_str(&format!("## Commit: {}\n\n", &commit_comments.commit_id[..7]));
+        // Commit header (truncate to 7 chars if longer, otherwise use full ID)
+        let short_id = if commit_comments.commit_id.len() > 7 {
+            &commit_comments.commit_id[..7]
+        } else {
+            &commit_comments.commit_id
+        };
+        output.push_str(&format!("## Commit: {short_id}\n\n"));
         output.push_str(&format!(
             "Date: {}\n\n",
             commit_comments.timestamp.format("%Y-%m-%d %H:%M:%S")
@@ -87,7 +99,7 @@ pub fn to_markdown(comments_list: &[CommitComments], branch: &str) -> Result<Str
         files.sort_by_key(|(path, _)| *path);
 
         for (file_path, file_comments) in files {
-            output.push_str(&format!("### {}\n\n", file_path));
+            output.push_str(&format!("### {file_path}\n\n"));
 
             // Separate comments by level
             let line_comments: Vec<_> = file_comments
@@ -212,11 +224,13 @@ pub fn to_json(comments_list: &[CommitComments]) -> Result<String> {
 }
 
 /// Export a single commit's comments to markdown
+#[allow(dead_code)] // Used in Phase 2 (TUI integration)
 pub fn commit_to_markdown(commit_comments: &CommitComments) -> Result<String> {
     to_markdown(&[commit_comments.clone()], &commit_comments.branch)
 }
 
 /// Export a single commit's comments to JSON
+#[allow(dead_code)] // Used in Phase 2 (TUI integration)
 pub fn commit_to_json(commit_comments: &CommitComments) -> Result<String> {
     to_json(&[commit_comments.clone()])
 }
@@ -238,17 +252,23 @@ mod tests {
     fn test_markdown_export_with_comments() {
         let mut commit_comments = CommitComments::new("abc123".to_string(), "main".to_string());
 
-        commit_comments.add_comment(Comment::new_line(
-            "src/main.rs".to_string(),
-            42,
-            LineType::Added,
-            "This needs error handling".to_string(),
-        ));
+        commit_comments.add_comment(
+            Comment::new_line(
+                "src/main.rs".to_string(),
+                42,
+                LineType::Added,
+                "This needs error handling".to_string(),
+            )
+            .unwrap(),
+        );
 
-        commit_comments.add_comment(Comment::new_file(
-            "src/main.rs".to_string(),
-            "Consider refactoring".to_string(),
-        ));
+        commit_comments.add_comment(
+            Comment::new_file(
+                "src/main.rs".to_string(),
+                "Consider refactoring".to_string(),
+            )
+            .unwrap(),
+        );
 
         let result = to_markdown(&[commit_comments], "main").unwrap();
 
@@ -270,12 +290,15 @@ mod tests {
     fn test_json_export_with_comments() {
         let mut commit_comments = CommitComments::new("abc123".to_string(), "main".to_string());
 
-        commit_comments.add_comment(Comment::new_line(
-            "src/main.rs".to_string(),
-            42,
-            LineType::Added,
-            "Test comment".to_string(),
-        ));
+        commit_comments.add_comment(
+            Comment::new_line(
+                "src/main.rs".to_string(),
+                42,
+                LineType::Added,
+                "Test comment".to_string(),
+            )
+            .unwrap(),
+        );
 
         let result = to_json(&[commit_comments]).unwrap();
         let parsed: ExportData = serde_json::from_str(&result).unwrap();

@@ -197,14 +197,18 @@ In-module tests (`#[cfg(test)]`) for:
 - [x] Context expansion (press 'e' to expand, 'r' to reset)
 - [x] All files shown in scrollable inline view
 - [x] Syntax highlighting module (prepared, not yet integrated)
-- [x] Review comments system (backend complete)
+- [x] Review comments system (backend and TUI complete)
 - [x] Keyboard/mouse input handling
 - [x] Header and footer UI
 - [x] Help dialog (press ?)
-- [x] Tests (22 passing: 17 unit + 5 integration)
+- [x] Tests (39 passing: 30 unit + 9 integration)
 - [x] Documentation (README, PLAN.md, CLAUDE.md)
 
 ### Recent Improvements
+- Implemented Phase 1: Comment system backend (git notes, export to markdown/JSON, CLI)
+- Implemented Phase 2: Comment TUI integration (create/view/delete via 'c'/'v'/'d' keys)
+- Added comment indicators in file headers showing comment counts
+- Fixed dead code warnings for unused helper functions
 - Fixed mouse click race condition on terminal resize
 - Added scroll bounds checking to prevent empty space
 - Optimized side-by-side rendering memory usage (windowed rendering)
@@ -217,9 +221,10 @@ In-module tests (`#[cfg(test)]`) for:
 - Fixed help dialog to block background scrolling
 - Moved ? shortcut to start of footer for small screen visibility
 
-### Release Readiness (v0.1.0)
+### Release Readiness (v1.0.0)
 - [x] Core functionality complete (all features working)
-- [x] 22 tests passing (17 unit + 5 integration)
+- [x] Comment system fully functional (create, view, delete, export)
+- [x] 39 tests passing (30 unit + 9 integration)
 - [x] Documentation updated (README.md, PLAN.md, CLAUDE.md)
 - [x] GitHub Pages site created (index.html, usage.html)
 - [x] CI/CD pipeline configured (.github/workflows/ci-cd.yml)
@@ -227,16 +232,16 @@ In-module tests (`#[cfg(test)]`) for:
 
 ### Pending Features (Future Versions)
 - [ ] Integrate syntax highlighting into diff rendering (module exists)
-- [ ] Add comment dialog UI (backend complete)
-- [ ] Connect comment system to keyboard shortcuts ('c', 'v', 'd')
+- [ ] Line-level and hunk-level comment creation (file-level only currently)
+- [ ] Comment indicators on individual lines (currently only on file headers)
 - [ ] Terminal screenshots with termshot or vhs
 
 ### Code Quality Metrics
-- **Files**: 21 Rust source files
-- **Total Lines**: ~2,400 lines of code
-- **Largest File**: 315 lines (diff_view.rs) - 10% under 350-line limit
-- **Test Coverage**: 22 tests covering core functionality
-- **Build Time**: ~4s debug, ~2min release (due to syntect/git2)
+- **Files**: 24 Rust source files
+- **Total Lines**: ~3,200 lines of code
+- **Largest File**: 474 lines (app.rs) - exceeds 350-line limit (needs refactoring)
+- **Test Coverage**: 39 tests covering core functionality and comments
+- **Build Time**: ~6s debug, ~16s release (due to syntect/git2)
 
 ## Common Tasks
 

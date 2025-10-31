@@ -69,4 +69,19 @@ impl Theme {
     pub fn border_style(&self) -> Style {
         Style::default().fg(self.border)
     }
+
+    /// Style for comment indicators - uses blue/cyan to avoid confusion with diff colors
+    pub fn comment_indicator_style(&self) -> Style {
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)
+    }
+
+    /// Style for search match highlighting
+    pub fn search_highlight_style(&self) -> Style {
+        Style::default()
+            .bg(Color::Yellow)
+            .fg(Color::Black)
+            .add_modifier(Modifier::BOLD)
+    }
 }

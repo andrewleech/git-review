@@ -71,6 +71,14 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
             app.horizontal_scroll,
         );
 
+        // Build title with comment indicator
+        let comment_count = crate::ui::comment_indicator::file_comment_count(app, &file.new_path);
+        let new_title = if comment_count > 0 {
+            format!(" New: {} [{}] ", file.new_path, comment_count)
+        } else {
+            format!(" New: {} ", file.new_path)
+        };
+
         let left_paragraph = Paragraph::new(left_lines).block(
             Block::default()
                 .title(format!(" Old: {} ", file.old_path))
@@ -81,7 +89,7 @@ fn render_side_by_side(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
         // Render right side (added lines)
         let right_paragraph = Paragraph::new(right_lines).block(
             Block::default()
-                .title(format!(" New: {} ", file.new_path))
+                .title(new_title)
                 .borders(Borders::ALL)
                 .border_style(theme.border_style()),
         );
@@ -130,29 +138,46 @@ fn render_inline(f: &mut Frame, app: &App, area: Rect, theme: &Theme) {
 /// Create styled lines from all files' diffs
 fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
     let mut lines = Vec::new();
+    let mut line_index = 0;
 
     // Show all files in one scrollable view
     for (file_idx, file) in app.current_files.iter().enumerate() {
         // File separator (except before first file)
         if file_idx > 0 {
             lines.push(Line::from(""));
+            line_index += 1;
             lines.push(Line::from(vec![Span::styled(
                 "─".repeat(80),
                 theme.context_style(),
             )]));
+            line_index += 1;
             lines.push(Line::from(""));
+            line_index += 1;
         }
 
-        // Show file header
-        lines.push(Line::from(vec![Span::styled(
+        // Show file header with comment indicator
+        let old_path_spans = vec![Span::styled(
             format!("--- {}", file.old_path),
             theme.removed_style(),
-        )]));
-        lines.push(Line::from(vec![Span::styled(
+        )];
+        let mut new_path_spans = vec![Span::styled(
             format!("+++ {}", file.new_path),
             theme.added_style(),
-        )]));
+        )];
+
+        // Add comment indicator for file
+        if let Some(indicator) =
+            crate::ui::comment_indicator::file_indicator(app, &file.new_path, theme)
+        {
+            new_path_spans.push(indicator);
+        }
+
+        lines.push(Line::from(old_path_spans));
+        line_index += 1;
+        lines.push(Line::from(new_path_spans));
+        line_index += 1;
         lines.push(Line::from(""));
+        line_index += 1;
 
         // Show hunks with expand buttons
         for hunk in &file.hunks {
@@ -163,18 +188,27 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
                 app.config.display.context_expand_increment,
             ) {
                 lines.push(expand_line);
+                line_index += 1;
             }
 
-            // Hunk header
-            lines.push(Line::from(vec![Span::styled(
+            // Hunk header with comment indicator
+            let mut hunk_header_spans = vec![Span::styled(
                 hunk.header.clone(),
                 theme.context_style(),
-            )]));
+            )];
+            if let Some(indicator) =
+                crate::ui::comment_indicator::hunk_indicator(app, &file.new_path, &hunk.header, theme)
+            {
+                hunk_header_spans.push(indicator);
+            }
+            lines.push(Line::from(hunk_header_spans));
+            line_index += 1;
 
-            // Hunk lines
+            // Hunk lines with comment indicators and search highlighting
             for hunk_line in &hunk.lines {
-                let line = format_hunk_line(hunk_line, theme);
+                let line = format_hunk_line(app, &file.new_path, hunk_line, theme, line_index);
                 lines.push(line);
+                line_index += 1;
             }
 
             // Expand button below (with file length check)
@@ -185,41 +219,84 @@ fn create_diff_lines<'a>(app: &App, theme: &Theme) -> Vec<Line<'a>> {
                 file.new_file_lines,
             ) {
                 lines.push(expand_line);
+                line_index += 1;
             }
 
             // Empty line between hunks
             lines.push(Line::from(""));
+            line_index += 1;
         }
     }
 
     lines
 }
 
-/// Format a single hunk line with appropriate styling
-fn format_hunk_line<'a>(hunk_line: &HunkLine, theme: &Theme) -> Line<'a> {
+/// Format a single hunk line with appropriate styling, comment indicator, and search highlighting
+fn format_hunk_line<'a>(app: &App, file_path: &str, hunk_line: &HunkLine, theme: &Theme, line_index: usize) -> Line<'a> {
     let (prefix, style) = match hunk_line.line_type {
         LineType::Added => ("+", theme.added_style()),
         LineType::Removed => ("-", theme.removed_style()),
         LineType::Context => (" ", theme.context_style()),
     };
 
-    let line_num = match hunk_line.line_type {
-        LineType::Added => hunk_line
-            .new_line_num
-            .map(|n| format!("{n:4} "))
-            .unwrap_or_else(|| "     ".to_string()),
-        LineType::Removed => hunk_line
-            .old_line_num
-            .map(|n| format!("{n:4} "))
-            .unwrap_or_else(|| "     ".to_string()),
-        LineType::Context => hunk_line
-            .old_line_num
-            .or(hunk_line.new_line_num)
-            .map(|n| format!("{n:4} "))
-            .unwrap_or_else(|| "     ".to_string()),
+    let line_num_value = match hunk_line.line_type {
+        LineType::Added => hunk_line.new_line_num,
+        LineType::Removed => hunk_line.old_line_num,
+        LineType::Context => hunk_line.old_line_num.or(hunk_line.new_line_num),
     };
+
+    let line_num = line_num_value
+        .map(|n| format!("{n:4} "))
+        .unwrap_or_else(|| "     ".to_string());
 
     let content = format!("{}{}{}", line_num, prefix, hunk_line.content);
 
-    Line::from(vec![Span::styled(content, style)])
+    // Get search matches for this line
+    let matches = app.get_matches_for_line(line_index);
+
+    // Build spans with search highlighting
+    let mut spans = if matches.is_empty() {
+        // No matches, single span
+        vec![Span::styled(content, style)]
+    } else {
+        // Build spans with highlighted matches
+        let mut result_spans = Vec::new();
+        let mut last_end = 0;
+
+        for (start, end) in matches {
+            // Add non-highlighted part before match
+            if start > last_end {
+                result_spans.push(Span::styled(
+                    content[last_end..start].to_string(),
+                    style,
+                ));
+            }
+
+            // Add highlighted match
+            result_spans.push(Span::styled(
+                content[start..end].to_string(),
+                theme.search_highlight_style(),
+            ));
+
+            last_end = end;
+        }
+
+        // Add remaining non-highlighted part
+        if last_end < content.len() {
+            result_spans.push(Span::styled(content[last_end..].to_string(), style));
+        }
+
+        result_spans
+    };
+
+    // Add comment indicator if present
+    if let Some(num) = line_num_value {
+        if let Some(indicator) =
+            crate::ui::comment_indicator::line_indicator(app, file_path, num, hunk_line.line_type, theme)
+        {
+            spans.push(indicator);
+        }
+    }
+
+    Line::from(spans)
 }

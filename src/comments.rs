@@ -1,10 +1,60 @@
+use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 use crate::git::diff_parser::LineType;
 
+/// Validate that a file path is safe for use in comments
+///
+/// Rejects:
+/// - Empty paths
+/// - Absolute paths (starting with '/')
+/// - Paths containing ".." (directory traversal)
+/// - Paths with invalid characters
+#[allow(dead_code)] // Used in Phase 2 (TUI integration)
+fn validate_file_path(path: &str) -> Result<()> {
+    if path.is_empty() {
+        return Err(anyhow::anyhow!("File path cannot be empty"));
+    }
+
+    if path.starts_with('/') {
+        return Err(anyhow::anyhow!(
+            "File path must be relative, not absolute: {path}"
+        ));
+    }
+
+    if path.contains("..") {
+        return Err(anyhow::anyhow!("File path cannot contain '..': {path}"));
+    }
+
+    // Check for null bytes or other control characters
+    if path.chars().any(|c| c.is_control()) {
+        return Err(anyhow::anyhow!(
+            "File path contains invalid control characters"
+        ));
+    }
+
+    // Validate using std::path to catch platform-specific issues
+    Path::new(path).components().try_fold((), |_, component| {
+        use std::path::Component;
+        match component {
+            Component::Normal(_) => Ok(()),
+            Component::ParentDir => {
+                Err(anyhow::anyhow!("Path contains parent directory reference"))
+            }
+            Component::RootDir | Component::Prefix(_) => {
+                Err(anyhow::anyhow!("Path must be relative"))
+            }
+            Component::CurDir => Ok(()), // Allow "./" in paths
+        }
+    })?;
+
+    Ok(())
+}
+
 /// Level of granularity for a comment
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CommentLevel {
     /// Comment on a specific line
@@ -16,7 +66,7 @@ pub enum CommentLevel {
 }
 
 /// Location within a file where a comment is attached
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum CommentLocation {
     /// Specific line in the diff
@@ -37,7 +87,7 @@ pub enum CommentLocation {
 }
 
 /// A single comment attached to code
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Comment {
     /// Granularity level of this comment
     pub level: CommentLevel,
@@ -51,6 +101,7 @@ pub struct Comment {
     pub created_at: DateTime<Local>,
 }
 
+#[allow(dead_code)] // Used in Phase 2 (TUI integration)
 impl Comment {
     /// Create a new line-level comment
     pub fn new_line(
@@ -58,8 +109,9 @@ impl Comment {
         line_number: usize,
         line_type: LineType,
         text: String,
-    ) -> Self {
-        Self {
+    ) -> Result<Self> {
+        validate_file_path(&file_path).context("Invalid file path for line comment")?;
+        Ok(Self {
             level: CommentLevel::Line,
             file_path,
             location: CommentLocation::Line {
@@ -68,12 +120,13 @@ impl Comment {
             },
             text,
             created_at: Local::now(),
-        }
+        })
     }
 
     /// Create a new hunk-level comment
-    pub fn new_hunk(file_path: String, hunk_header: String, text: String) -> Self {
-        Self {
+    pub fn new_hunk(file_path: String, hunk_header: String, text: String) -> Result<Self> {
+        validate_file_path(&file_path).context("Invalid file path for hunk comment")?;
+        Ok(Self {
             level: CommentLevel::Hunk,
             file_path,
             location: CommentLocation::Hunk {
@@ -81,18 +134,19 @@ impl Comment {
             },
             text,
             created_at: Local::now(),
-        }
+        })
     }
 
     /// Create a new file-level comment
-    pub fn new_file(file_path: String, text: String) -> Self {
-        Self {
+    pub fn new_file(file_path: String, text: String) -> Result<Self> {
+        validate_file_path(&file_path).context("Invalid file path for file comment")?;
+        Ok(Self {
             level: CommentLevel::File,
             file_path,
             location: CommentLocation::File,
             text,
             created_at: Local::now(),
-        }
+        })
     }
 
     /// Check if this comment matches a specific line location
@@ -131,17 +185,25 @@ impl Comment {
                     LineType::Removed => "removed",
                     LineType::Context => "context",
                 };
-                format!("Line {} ({})", number, kind_str)
+                format!("Line {number} ({kind_str})")
             }
-            CommentLocation::Hunk { header } => format!("Hunk: {}", header),
+            CommentLocation::Hunk { header } => format!("Hunk: {header}"),
             CommentLocation::File => "File-level".to_string(),
         }
     }
 }
 
+/// Default schema version for CommitComments serialization
+fn default_schema_version() -> u32 {
+    1
+}
+
 /// Collection of comments for a single commit
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitComments {
+    /// Schema version for forward/backward compatibility
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
     /// The commit ID (full hash)
     pub commit_id: String,
     /// The branch this review was performed on
@@ -152,10 +214,12 @@ pub struct CommitComments {
     pub comments: Vec<Comment>,
 }
 
+#[allow(dead_code)] // Used in Phase 2 (TUI integration)
 impl CommitComments {
     /// Create a new comment collection for a commit
     pub fn new(commit_id: String, branch: String) -> Self {
         Self {
+            schema_version: default_schema_version(),
             commit_id,
             branch,
             timestamp: Local::now(),
@@ -243,8 +307,13 @@ mod tests {
 
     #[test]
     fn test_comment_creation() {
-        let comment =
-            Comment::new_line("src/main.rs".to_string(), 42, LineType::Added, "Test".to_string());
+        let comment = Comment::new_line(
+            "src/main.rs".to_string(),
+            42,
+            LineType::Added,
+            "Test".to_string(),
+        )
+        .unwrap();
 
         assert_eq!(comment.level, CommentLevel::Line);
         assert_eq!(comment.file_path, "src/main.rs");
@@ -253,8 +322,13 @@ mod tests {
 
     #[test]
     fn test_comment_matching() {
-        let comment =
-            Comment::new_line("src/main.rs".to_string(), 42, LineType::Added, "Test".to_string());
+        let comment = Comment::new_line(
+            "src/main.rs".to_string(),
+            42,
+            LineType::Added,
+            "Test".to_string(),
+        )
+        .unwrap();
 
         assert!(comment.matches_line("src/main.rs", 42, LineType::Added));
         assert!(!comment.matches_line("src/main.rs", 43, LineType::Added));
@@ -266,12 +340,15 @@ mod tests {
     fn test_commit_comments_serialization() {
         let mut commit_comments = CommitComments::new("abc123".to_string(), "main".to_string());
 
-        commit_comments.add_comment(Comment::new_line(
-            "src/main.rs".to_string(),
-            42,
-            LineType::Added,
-            "Test comment".to_string(),
-        ));
+        commit_comments.add_comment(
+            Comment::new_line(
+                "src/main.rs".to_string(),
+                42,
+                LineType::Added,
+                "Test comment".to_string(),
+            )
+            .unwrap(),
+        );
 
         let json = commit_comments.to_json().unwrap();
         let deserialized = CommitComments::from_json(&json).unwrap();
@@ -286,22 +363,27 @@ mod tests {
     fn test_comments_filtering() {
         let mut commit_comments = CommitComments::new("abc123".to_string(), "main".to_string());
 
-        commit_comments.add_comment(Comment::new_line(
-            "src/main.rs".to_string(),
-            42,
-            LineType::Added,
-            "Line comment".to_string(),
-        ));
-        commit_comments.add_comment(Comment::new_file(
-            "src/main.rs".to_string(),
-            "File comment".to_string(),
-        ));
-        commit_comments.add_comment(Comment::new_line(
-            "src/other.rs".to_string(),
-            10,
-            LineType::Removed,
-            "Other file".to_string(),
-        ));
+        commit_comments.add_comment(
+            Comment::new_line(
+                "src/main.rs".to_string(),
+                42,
+                LineType::Added,
+                "Line comment".to_string(),
+            )
+            .unwrap(),
+        );
+        commit_comments.add_comment(
+            Comment::new_file("src/main.rs".to_string(), "File comment".to_string()).unwrap(),
+        );
+        commit_comments.add_comment(
+            Comment::new_line(
+                "src/other.rs".to_string(),
+                10,
+                LineType::Removed,
+                "Other file".to_string(),
+            )
+            .unwrap(),
+        );
 
         let main_comments = commit_comments.comments_for_file("src/main.rs");
         assert_eq!(main_comments.len(), 2);

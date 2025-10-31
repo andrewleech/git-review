@@ -25,8 +25,31 @@ pub fn create_side_by_side_lines<'a>(
         for hunk in &file.hunks {
             // Hunk header on both sides (scrolled and truncated if needed)
             if current_line >= skip && current_line < end_line {
-                let mut header =
-                    apply_horizontal_scroll(&hunk.header, horizontal_offset, max_width);
+                // Check if this hunk has comments
+                let hunk_comment_count = crate::ui::comment_indicator::hunk_comment_count(
+                    app,
+                    &file.new_path,
+                    &hunk.header,
+                );
+
+                let indicator_text = if hunk_comment_count > 0 {
+                    format!(" [{hunk_comment_count}]")
+                } else {
+                    String::new()
+                };
+
+                // Apply horizontal scroll to header only, keeping indicator visible
+                let indicator_len = indicator_text.len();
+                let available_for_header = max_width.saturating_sub(indicator_len);
+
+                let mut header = apply_horizontal_scroll(
+                    &hunk.header,
+                    horizontal_offset,
+                    available_for_header,
+                );
+
+                // Add indicator at the end (stays visible)
+                header.push_str(&indicator_text);
 
                 // Ensure header fits exactly within max_width
                 let header_len = header.chars().count();
@@ -64,6 +87,8 @@ pub fn create_side_by_side_lines<'a>(
                         // Context appears on both sides
                         if current_line >= skip {
                             let left_line = format_side_line(
+                                app,
+                                &file.new_path,
                                 hunk_line,
                                 theme,
                                 true,
@@ -71,6 +96,8 @@ pub fn create_side_by_side_lines<'a>(
                                 horizontal_offset,
                             );
                             let right_line = format_side_line(
+                                app,
+                                &file.new_path,
                                 hunk_line,
                                 theme,
                                 false,
@@ -111,6 +138,8 @@ pub fn create_side_by_side_lines<'a>(
                                     .get(j)
                                     .map(|line| {
                                         format_side_line(
+                                            app,
+                                            &file.new_path,
                                             line,
                                             theme,
                                             true,
@@ -123,6 +152,8 @@ pub fn create_side_by_side_lines<'a>(
                                     .get(j)
                                     .map(|line| {
                                         format_side_line(
+                                            app,
+                                            &file.new_path,
                                             line,
                                             theme,
                                             false,
@@ -142,6 +173,8 @@ pub fn create_side_by_side_lines<'a>(
                         // Standalone added lines (not following removed)
                         if current_line >= skip {
                             let right_line = format_side_line(
+                                app,
+                                &file.new_path,
                                 hunk_line,
                                 theme,
                                 false,
@@ -176,6 +209,8 @@ pub fn create_side_by_side_lines<'a>(
 
 /// Format a line for side-by-side view with horizontal scrolling
 fn format_side_line<'a>(
+    app: &App,
+    file_path: &str,
     hunk_line: &HunkLine,
     theme: &Theme,
     is_left: bool,
@@ -200,18 +235,47 @@ fn format_side_line<'a>(
             .unwrap_or_else(|| "     ".to_string())
     };
 
-    // Build full line (line number doesn't scroll, only content)
+    // Check for line comment indicator
+    let line_num_value = if is_left {
+        hunk_line.old_line_num
+    } else {
+        hunk_line.new_line_num
+    };
+
+    let indicator_text = if let Some(num) = line_num_value {
+        let count = crate::ui::comment_indicator::line_comment_count(
+            app,
+            file_path,
+            num,
+            hunk_line.line_type,
+        );
+        if count > 0 {
+            format!(" [{count}]")
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    // Build full line (line number and indicator don't scroll, only content)
     let full_content = format!("{}{}", prefix, hunk_line.content);
+
+    // Calculate space needed for indicator
+    let indicator_len = indicator_text.len();
+    let available_for_content = max_width
+        .saturating_sub(line_num.len())
+        .saturating_sub(indicator_len);
 
     // Apply horizontal scroll to content only
     let scrolled_content = apply_horizontal_scroll(
         &full_content,
         horizontal_offset,
-        max_width.saturating_sub(line_num.len()),
+        available_for_content,
     );
 
-    // Combine line number with scrolled content
-    let mut display = format!("{line_num}{scrolled_content}");
+    // Combine line number + scrolled content + indicator (indicator stays visible)
+    let mut display = format!("{line_num}{scrolled_content}{indicator_text}");
 
     // Ensure the display string fits exactly within max_width by truncating or padding
     let display_len = display.chars().count();

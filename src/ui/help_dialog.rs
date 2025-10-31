@@ -74,6 +74,20 @@ pub fn render(f: &mut Frame, area: Rect) {
             Span::raw("  - Reset context to default"),
         ]),
         Line::from(""),
+        Line::from(Span::styled("Comments", theme.header_style())),
+        Line::from(vec![
+            Span::styled("  c", theme.selected_style()),
+            Span::raw("  - Create comment on current file"),
+        ]),
+        Line::from(vec![
+            Span::styled("  v", theme.selected_style()),
+            Span::raw("  - View comments for current file"),
+        ]),
+        Line::from(vec![
+            Span::styled("  d", theme.selected_style()),
+            Span::raw("  - Delete first comment on current file"),
+        ]),
+        Line::from(""),
         Line::from(Span::styled(
             "Side-by-Side Navigation",
             theme.header_style(),

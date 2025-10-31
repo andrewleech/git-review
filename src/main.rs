@@ -48,12 +48,21 @@ struct Args {
     export_comments: bool,
 
     /// Export format (markdown or json)
-    #[arg(long, value_enum, default_value = "markdown", requires = "export_comments")]
+    #[arg(
+        long,
+        value_enum,
+        default_value = "markdown",
+        requires = "export_comments"
+    )]
     format: ExportFormatArg,
 
     /// Clear all comments for current branch
     #[arg(long, conflicts_with = "export_comments")]
     clear_comments: bool,
+
+    /// Skip confirmation prompts (for automation)
+    #[arg(short = 'y', long)]
+    yes: bool,
 }
 
 fn main() -> Result<()> {
@@ -70,7 +79,7 @@ fn main() -> Result<()> {
         let comments = git::notes::read_all_for_branch(&repo, &branch)?;
 
         if comments.is_empty() {
-            eprintln!("No comments found for branch '{}'", branch);
+            eprintln!("No comments found for branch '{branch}'");
             return Ok(());
         }
 
@@ -79,7 +88,7 @@ fn main() -> Result<()> {
             ExportFormatArg::Json => export::to_json(&comments)?,
         };
 
-        println!("{}", output);
+        println!("{output}");
         return Ok(());
     }
 
@@ -87,15 +96,20 @@ fn main() -> Result<()> {
     if args.clear_comments {
         let branch = get_current_branch(&repo)?;
 
-        print!("Delete all comments for branch '{}'? [y/N]: ", branch);
-        io::stdout().flush()?;
+        let confirmed = if args.yes {
+            true
+        } else {
+            print!("Delete all comments for branch '{branch}'? [y/N]: ");
+            io::stdout().flush()?;
 
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
+            let mut input = String::new();
+            io::stdin().read_line(&mut input)?;
+            input.trim().to_lowercase() == "y"
+        };
 
-        if input.trim().to_lowercase() == "y" {
+        if confirmed {
             let deleted = git::notes::clear_branch_notes(&repo, &branch)?;
-            println!("✓ Cleared {} comment(s) for branch '{}'", deleted, branch);
+            println!("✓ Cleared {deleted} comment(s) for branch '{branch}'");
         } else {
             println!("Cancelled");
         }
@@ -135,8 +149,14 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    // Get current branch for comment storage
+    let current_branch = get_current_branch(&repo)?;
+
     // Initialize app state
-    let mut app = app::App::new(repo, commits, config);
+    let mut app = app::App::new(repo, commits, config, current_branch);
+
+    // Load comments from git notes
+    app.load_comments();
 
     // Load initial diff
     app.init_diff();
@@ -215,7 +235,9 @@ fn get_current_branch(repo: &Repository) -> Result<String> {
 
     if let Some(branch_name) = head.shorthand() {
         // Remove "refs/heads/" prefix if present
-        let name = branch_name.strip_prefix("refs/heads/").unwrap_or(branch_name);
+        let name = branch_name
+            .strip_prefix("refs/heads/")
+            .unwrap_or(branch_name);
         Ok(name.to_string())
     } else {
         // Detached HEAD state - use commit SHA

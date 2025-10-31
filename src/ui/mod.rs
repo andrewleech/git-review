@@ -1,3 +1,5 @@
+pub mod comment_dialog;
+pub mod comment_indicator;
 pub mod diff_view;
 pub mod footer;
 pub mod header;
@@ -5,6 +7,7 @@ pub mod help_dialog;
 pub mod hunk_expander;
 pub mod layout;
 pub mod log_pane;
+pub mod search_prompt;
 pub mod side_by_side;
 pub mod theme;
 
@@ -53,6 +56,21 @@ pub fn render(f: &mut Frame, app: &App) -> Result<()> {
     if app.help_visible {
         help_dialog::render(f, size);
     }
+
+    // Render comment dialogs on top
+    use crate::app::CommentMode;
+    match &app.comment_mode {
+        CommentMode::Creating { .. } => {
+            comment_dialog::render_create(f, app, size);
+        }
+        CommentMode::ViewingComments(_) => {
+            comment_dialog::render_view(f, app, size);
+        }
+        CommentMode::Normal => {}
+    }
+
+    // Render search prompt on top
+    search_prompt::render(f, app, size);
 
     Ok(())
 }

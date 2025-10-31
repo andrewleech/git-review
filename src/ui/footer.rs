@@ -12,9 +12,9 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
 
     // Show different shortcuts based on diff mode, with ?:help at the start for small screens
     let shortcuts = if app.config.display.diff_mode == crate::config::DiffMode::SideBySide {
-        " ?:help | q:quit | c:comment | v:view | d:delete | space:log | s:side | i:inline | n/p:commit | Ctrl-PgUp/Dn:scroll"
+        " ?:help | q:quit | /:search n:next N:prev | c:comment | v:view | space:log | s:side | i:inline | p/P:commit | Ctrl-PgUp/Dn:scroll"
     } else {
-        " ?:help | q:quit | c:comment | v:view | d:delete | space:log | n/p:commit | e:expand | r:reset | Ctrl-PgUp/Dn:scroll"
+        " ?:help | q:quit | /:search n:next N:prev | c:comment | v:view | space:log | p/P:commit | e:expand | r:reset | Ctrl-PgUp/Dn:scroll"
     };
 
     let footer = Paragraph::new(shortcuts)

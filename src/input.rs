@@ -1,4 +1,4 @@
-use crate::app::{App, CommentMode};
+use crate::app::{App, CommentMode, SearchMode};
 use crate::config::DiffMode;
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
@@ -7,7 +7,12 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKi
 ///
 /// Returns true if the app should exit
 pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
-    // Handle comment dialog input first
+    // Handle search input first
+    if app.search_mode == SearchMode::Entering {
+        return handle_search_input(key, app);
+    }
+
+    // Handle comment dialog input
     if matches!(app.comment_mode, CommentMode::Creating { .. }) {
         return crate::ui::comment_dialog::handle_key(key, app);
     }
@@ -76,12 +81,12 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             }
         }
 
-        // Commit navigation
-        (KeyCode::Char('n'), KeyModifiers::NONE) => {
-            app.next_commit();
-        }
+        // Commit navigation (p only, n is used for search next)
         (KeyCode::Char('p'), KeyModifiers::NONE) => {
             app.previous_commit();
+        }
+        (KeyCode::Char('P'), KeyModifiers::SHIFT) => {
+            app.next_commit(); // Use Shift-P for next commit now
         }
 
         // File navigation
@@ -123,17 +128,51 @@ pub fn handle_key_event(key: KeyEvent, app: &mut App) -> Result<bool> {
             }
         }
 
-        // Help - handle both ? directly and Shift+/
-        (KeyCode::Char('?'), _) | (KeyCode::Char('/'), KeyModifiers::SHIFT) => {
+        // Search
+        (KeyCode::Char('/'), KeyModifiers::NONE) => {
+            app.start_search();
+        }
+        (KeyCode::Char('n'), KeyModifiers::NONE) => {
+            app.next_match();
+        }
+        (KeyCode::Char('N'), KeyModifiers::SHIFT) => {
+            app.prev_match();
+        }
+
+        // Help - handle ? directly (but not Shift+/ since that's search)
+        (KeyCode::Char('?'), _) => {
             app.toggle_help();
         }
         (KeyCode::Esc, KeyModifiers::NONE) => {
-            // ESC only handled here when help is not visible (would be caught above otherwise)
+            // ESC clears search if active, otherwise does nothing
+            if !app.search_matches.is_empty() {
+                app.clear_search();
+            }
         }
 
         _ => {}
     }
 
+    Ok(false)
+}
+
+/// Handle keyboard input during search entry
+fn handle_search_input(key: KeyEvent, app: &mut App) -> Result<bool> {
+    match key.code {
+        KeyCode::Enter => {
+            app.execute_search();
+        }
+        KeyCode::Esc => {
+            app.clear_search();
+        }
+        KeyCode::Char(c) => {
+            app.search_query.push(c);
+        }
+        KeyCode::Backspace => {
+            app.search_query.pop();
+        }
+        _ => {}
+    }
     Ok(false)
 }
 
